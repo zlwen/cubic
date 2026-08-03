@@ -61,7 +61,12 @@ export class AudioController extends Component {
   }
 
   toggleSound(): boolean {
-    this.soundEnabled = !this.soundEnabled;
+    this.setSoundEnabled(!this.soundEnabled);
+    return this.soundEnabled;
+  }
+
+  setSoundEnabled(enabled: boolean): void {
+    this.soundEnabled = enabled;
     if (this.effectsSource) {
       this.effectsSource.volume = this.soundEnabled ? 1 : 0;
     }
@@ -71,7 +76,6 @@ export class AudioController extends Component {
         this.ambientSource.play();
       }
     }
-    return this.soundEnabled;
   }
 
   isSoundEnabled(): boolean {

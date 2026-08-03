@@ -30,6 +30,7 @@ import { CameraController } from './CameraController';
 import { GameplayController } from './GameplayController';
 import { MobileSafeArea } from './MobileSafeArea';
 import { TouchInputController } from './TouchInputController';
+import type { UiTextKey } from './shared/game/index';
 
 const { ccclass, property } = _decorator;
 
@@ -41,10 +42,37 @@ interface GameplayUi {
   readonly gameplayHudRoot: Node;
   readonly pauseMenuRoot: Node;
   readonly titleMenuRoot: Node;
+  readonly stageSelectRoot: Node;
+  readonly howToPlayRoot: Node;
+  readonly creditsRoot: Node;
+  readonly newGameConfirmRoot: Node;
+  readonly failureRoot: Node;
+  readonly completionRoot: Node;
+  readonly tutorialRoot: Node;
   readonly passcodeInput: EditBox;
   readonly passcodeFeedback: Label;
   readonly soundToggleLabel: Label;
+  readonly titleSoundLabel: Label;
+  readonly titleLanguageLabel: Label;
+  readonly pauseLanguageLabel: Label;
+  readonly resumeButton: Button;
+  readonly resumeButtonLabel: Label;
+  readonly failureReasonLabel: Label;
+  readonly completionStatsLabel: Label;
+  readonly completionContinueLabel: Label;
+  readonly tutorialTitleLabel: Label;
+  readonly tutorialSymbolLabel: Label;
+  readonly tutorialBodyLabel: Label;
+  readonly tutorialProgressLabel: Label;
+  readonly tutorialNextLabel: Label;
+  readonly howTopicTitleLabel: Label;
+  readonly howTopicSymbolLabel: Label;
+  readonly howTopicBodyLabel: Label;
+  readonly howTopicProgressLabel: Label;
   readonly splitControlRoot: Node;
+  readonly stageButtons: Button[];
+  readonly stageButtonLabels: Label[];
+  readonly localizedLabels: Partial<Record<UiTextKey, Label[]>>;
 }
 
 @ccclass('GameplayBootstrap')
@@ -81,10 +109,37 @@ export class GameplayBootstrap extends Component {
     gameplay.gameplayHudRoot = ui.gameplayHudRoot;
     gameplay.pauseMenuRoot = ui.pauseMenuRoot;
     gameplay.titleMenuRoot = ui.titleMenuRoot;
+    gameplay.stageSelectRoot = ui.stageSelectRoot;
+    gameplay.howToPlayRoot = ui.howToPlayRoot;
+    gameplay.creditsRoot = ui.creditsRoot;
+    gameplay.newGameConfirmRoot = ui.newGameConfirmRoot;
+    gameplay.failureRoot = ui.failureRoot;
+    gameplay.completionRoot = ui.completionRoot;
+    gameplay.tutorialRoot = ui.tutorialRoot;
     gameplay.passcodeInput = ui.passcodeInput;
     gameplay.passcodeFeedback = ui.passcodeFeedback;
     gameplay.soundToggleLabel = ui.soundToggleLabel;
+    gameplay.titleSoundLabel = ui.titleSoundLabel;
+    gameplay.titleLanguageLabel = ui.titleLanguageLabel;
+    gameplay.pauseLanguageLabel = ui.pauseLanguageLabel;
+    gameplay.resumeButton = ui.resumeButton;
+    gameplay.resumeButtonLabel = ui.resumeButtonLabel;
+    gameplay.failureReasonLabel = ui.failureReasonLabel;
+    gameplay.completionStatsLabel = ui.completionStatsLabel;
+    gameplay.completionContinueLabel = ui.completionContinueLabel;
+    gameplay.tutorialTitleLabel = ui.tutorialTitleLabel;
+    gameplay.tutorialSymbolLabel = ui.tutorialSymbolLabel;
+    gameplay.tutorialBodyLabel = ui.tutorialBodyLabel;
+    gameplay.tutorialProgressLabel = ui.tutorialProgressLabel;
+    gameplay.tutorialNextLabel = ui.tutorialNextLabel;
+    gameplay.howTopicTitleLabel = ui.howTopicTitleLabel;
+    gameplay.howTopicSymbolLabel = ui.howTopicSymbolLabel;
+    gameplay.howTopicBodyLabel = ui.howTopicBodyLabel;
+    gameplay.howTopicProgressLabel = ui.howTopicProgressLabel;
     gameplay.splitControlRoot = ui.splitControlRoot;
+    gameplay.stageButtons = ui.stageButtons;
+    gameplay.stageButtonLabels = ui.stageButtonLabels;
+    gameplay.localizedLabels = ui.localizedLabels;
   }
 
   private createChild(name: string): Node {
@@ -209,6 +264,12 @@ export class GameplayBootstrap extends Component {
 
     const safeArea = this.createUiRoot('SafeArea', canvasNode, visibleSize.width, visibleSize.height);
     safeArea.addComponent(MobileSafeArea);
+    const localizedLabels: Partial<Record<UiTextKey, Label[]>> = {};
+    const bind = (key: UiTextKey, label: Label): void => {
+      const labels = localizedLabels[key];
+      if (labels) labels.push(label);
+      else localizedLabels[key] = [label];
+    };
 
     const gameplayHudRoot = this.createUiRoot(
       'GameplayHud',
@@ -226,6 +287,7 @@ export class GameplayBootstrap extends Component {
       126,
       48,
     );
+    bind('menu', menuButton.label);
     this.alignCorner(menuButton.button.node, 'left');
     const splitControl = this.createButton(
       gameplayHudRoot,
@@ -236,6 +298,7 @@ export class GameplayBootstrap extends Component {
       176,
       48,
     );
+    bind('switchBlock', splitControl.label);
     const splitWidget = splitControl.button.node.addComponent(Widget);
     splitWidget.isAlignTop = true;
     splitWidget.isAlignLeft = true;
@@ -255,33 +318,228 @@ export class GameplayBootstrap extends Component {
       safeArea,
       visibleSize.width,
       visibleSize.height,
-      new Color(8, 9, 11, 252),
+      new Color(6, 7, 9, 148),
     );
-    const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(0, 145, 0), 620, 86, 66);
-    title.node.setParent(titleMenuRoot);
+    const titleBand = this.createUiRoot('TitleBand', titleMenuRoot, 390, visibleSize.height);
+    titleBand.setPosition(-visibleSize.width * 0.5 + 195, 0);
+    this.drawPanel(titleBand, 390, visibleSize.height, new Color(12, 14, 17, 238));
+    const titleY = Math.min(205, visibleSize.height * 0.32);
+    const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(0, titleY, 0), 350, 74, 58);
+    title.node.setParent(titleBand);
     const subtitle = this.createLabel(
       'GameSubtitle',
       'ROLLING BLOCK PUZZLE',
-      new Vec3(0, 95, 0),
-      520,
+      new Vec3(0, titleY - 50, 0),
+      350,
       34,
-      16,
+      14,
     );
     subtitle.color = new Color(164, 166, 172, 255);
-    subtitle.node.setParent(titleMenuRoot);
-    this.createButton(titleMenuRoot, 'StartButton', 'START GAME', new Vec3(0, 32, 0), 'startGame', 280, 52);
-    const passcodeInput = this.createPasscodeInput(titleMenuRoot, new Vec3(-70, -58, 0));
-    this.createButton(titleMenuRoot, 'PasscodeButton', 'ENTER', new Vec3(145, -58, 0), 'submitPasscode', 140, 52);
+    subtitle.node.setParent(titleBand);
+    bind('gameSubtitle', subtitle);
+    const startButton = this.createButton(titleBand, 'StartButton', 'START NEW GAME', new Vec3(0, 82, 0), 'startGame', 300, 42);
+    const resume = this.createButton(titleBand, 'ResumeButton', 'RESUME GAME', new Vec3(0, 32, 0), 'resumeGame', 300, 42);
+    const loadStageButton = this.createButton(titleBand, 'LoadStageButton', 'LOAD STAGE', new Vec3(0, -18, 0), 'openStageSelect', 300, 42);
+    const howToButton = this.createButton(titleBand, 'HowToButton', 'HOW TO PLAY', new Vec3(0, -68, 0), 'showHowToPlay', 300, 42);
+    const titleSoundButton = this.createButton(titleBand, 'TitleSoundButton', 'TOGGLE SOUND: ON', new Vec3(0, -118, 0), 'toggleSound', 300, 42);
+    const titleLanguageButton = this.createButton(titleBand, 'TitleLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -168, 0), 'cycleLanguage', 300, 42);
+    const creditsButton = this.createButton(titleBand, 'CreditsButton', 'CREDITS', new Vec3(0, -218, 0), 'showCredits', 300, 42);
+    bind('startNewGame', startButton.label);
+    bind('loadStage', loadStageButton.label);
+    bind('howToPlay', howToButton.label);
+    bind('credits', creditsButton.label);
+
+    const stageSelectRoot = this.createOverlay(
+      'StageSelect',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(6, 7, 9, 248),
+    );
+    const stageTitle = this.createLabel('StageTitle', 'LOAD STAGE', new Vec3(0, 205, 0), 500, 52, 34);
+    stageTitle.node.setParent(stageSelectRoot);
+    bind('loadStage', stageTitle);
+    const stageButtons: Button[] = [];
+    const stageButtonLabels: Label[] = [];
+    for (let index = 0; index < 33; index += 1) {
+      const column = index % 11;
+      const row = Math.floor(index / 11);
+      const stageButton = this.createButton(
+        stageSelectRoot,
+        `StageButton${index + 1}`,
+        index < 9 ? `0${index + 1}` : String(index + 1),
+        new Vec3((column - 5) * 61, 118 - row * 56, 0),
+        'selectStage',
+        52,
+        42,
+        String(index),
+      );
+      stageButtons.push(stageButton.button);
+      stageButtonLabels.push(stageButton.label);
+    }
+    const passcodeInput = this.createPasscodeInput(stageSelectRoot, new Vec3(-70, -96, 0));
+    const passcodeButton = this.createButton(stageSelectRoot, 'PasscodeButton', 'ENTER', new Vec3(145, -96, 0), 'submitPasscode', 140, 52);
+    bind('enter', passcodeButton.label);
     const passcodeFeedback = this.createLabel(
       'PasscodeFeedback',
       '',
-      new Vec3(0, -116, 0),
+      new Vec3(0, -145, 0),
       460,
       32,
       15,
     );
     passcodeFeedback.color = new Color(218, 91, 99, 255);
-    passcodeFeedback.node.setParent(titleMenuRoot);
+    passcodeFeedback.node.setParent(stageSelectRoot);
+    const stageBackButton = this.createButton(stageSelectRoot, 'StageBackButton', 'BACK', new Vec3(0, -196, 0), 'returnToTitle', 180, 44);
+    bind('back', stageBackButton.label);
+    stageSelectRoot.active = false;
+
+    const howToPlayRoot = this.createOverlay(
+      'HowToPlay',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(6, 7, 9, 248),
+    );
+    const howTitle = this.createLabel('HowTitle', 'HOW TO PLAY', new Vec3(0, 205, 0), 600, 52, 34);
+    howTitle.node.setParent(howToPlayRoot);
+    bind('howToPlay', howTitle);
+    const howTopicSymbolLabel = this.createBadge(howToPlayRoot, 'HowTopicBadge', new Vec3(-280, 30, 0));
+    const howTopicTitleLabel = this.createLabel('HowTopicTitle', '', new Vec3(100, 95, 0), 540, 44, 27);
+    howTopicTitleLabel.horizontalAlign = HorizontalTextAlignment.LEFT;
+    howTopicTitleLabel.node.setParent(howToPlayRoot);
+    const howTopicBodyLabel = this.createLabel('HowTopicBody', '', new Vec3(100, 15, 0), 540, 120, 18);
+    howTopicBodyLabel.horizontalAlign = HorizontalTextAlignment.LEFT;
+    howTopicBodyLabel.lineHeight = 26;
+    howTopicBodyLabel.node.setParent(howToPlayRoot);
+    const howTopicProgressLabel = this.createLabel('HowTopicProgress', '1 / 9', new Vec3(0, -105, 0), 180, 32, 15);
+    howTopicProgressLabel.color = new Color(164, 166, 172, 255);
+    howTopicProgressLabel.node.setParent(howToPlayRoot);
+    const howPreviousButton = this.createButton(howToPlayRoot, 'HowPreviousButton', 'PREVIOUS', new Vec3(-150, -155, 0), 'previousHowTopic', 220, 44);
+    const howNextButton = this.createButton(howToPlayRoot, 'HowNextButton', 'NEXT', new Vec3(150, -155, 0), 'nextHowTopic', 220, 44);
+    const howBackButton = this.createButton(howToPlayRoot, 'HowBackButton', 'BACK', new Vec3(0, -205, 0), 'returnToTitle', 180, 44);
+    bind('previous', howPreviousButton.label);
+    bind('next', howNextButton.label);
+    bind('back', howBackButton.label);
+    howToPlayRoot.active = false;
+
+    const creditsRoot = this.createOverlay(
+      'Credits',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(6, 7, 9, 248),
+    );
+    const creditsTitle = this.createLabel('CreditsTitle', 'CREDITS', new Vec3(0, 145, 0), 500, 52, 34);
+    creditsTitle.node.setParent(creditsRoot);
+    bind('credits', creditsTitle);
+    const creditsCopy = this.createLabel(
+      'CreditsCopy',
+      'DESIGN & DEVELOPMENT\nCUBIC TEAM\n\nORIGINAL LEVELS, VISUALS & AUDIO\nCREATED FOR CUBIC',
+      new Vec3(0, 15, 0),
+      620,
+      210,
+      18,
+    );
+    creditsCopy.lineHeight = 28;
+    creditsCopy.node.setParent(creditsRoot);
+    bind('creditsCopy', creditsCopy);
+    const creditsBackButton = this.createButton(creditsRoot, 'CreditsBackButton', 'BACK', new Vec3(0, -155, 0), 'returnToTitle', 180, 44);
+    bind('back', creditsBackButton.label);
+    creditsRoot.active = false;
+
+    const newGameConfirmRoot = this.createOverlay(
+      'NewGameConfirm',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(3, 4, 5, 232),
+    );
+    const confirmPanel = this.createUiRoot('ConfirmPanel', newGameConfirmRoot, 440, 260);
+    this.drawPanel(confirmPanel, 440, 260, new Color(25, 27, 31, 252));
+    const confirmTitle = this.createLabel('ConfirmTitle', 'START NEW GAME?', new Vec3(0, 78, 0), 380, 46, 28);
+    confirmTitle.node.setParent(confirmPanel);
+    const confirmCopy = this.createLabel('ConfirmCopy', 'CURRENT CAMPAIGN PROGRESS WILL RESET.', new Vec3(0, 25, 0), 380, 34, 14);
+    confirmCopy.color = new Color(174, 177, 184, 255);
+    confirmCopy.node.setParent(confirmPanel);
+    const confirmNewButton = this.createButton(confirmPanel, 'ConfirmNewButton', 'START', new Vec3(-95, -58, 0), 'confirmNewGame', 170, 48);
+    const cancelNewButton = this.createButton(confirmPanel, 'CancelNewButton', 'CANCEL', new Vec3(95, -58, 0), 'cancelNewGame', 170, 48);
+    bind('confirmNewGameTitle', confirmTitle);
+    bind('confirmNewGameCopy', confirmCopy);
+    bind('start', confirmNewButton.label);
+    bind('cancel', cancelNewButton.label);
+    newGameConfirmRoot.active = false;
+
+    const failureRoot = this.createOverlay(
+      'FailureResult',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(3, 4, 5, 224),
+    );
+    const failurePanel = this.createUiRoot('FailurePanel', failureRoot, 420, 270);
+    this.drawPanel(failurePanel, 420, 270, new Color(25, 27, 31, 252));
+    const failureTitle = this.createLabel('FailureTitle', 'STAGE FAILED', new Vec3(0, 82, 0), 360, 48, 30);
+    failureTitle.color = new Color(218, 91, 99, 255);
+    failureTitle.node.setParent(failurePanel);
+    const failureReasonLabel = this.createLabel('FailureReason', 'FELL INTO THE VOID', new Vec3(0, 30, 0), 360, 34, 15);
+    failureReasonLabel.node.setParent(failurePanel);
+    const retryButton = this.createButton(failurePanel, 'RetryButton', 'RETRY', new Vec3(-95, -58, 0), 'retryLevel', 170, 48);
+    const failureQuitButton = this.createButton(failurePanel, 'FailureQuitButton', 'QUIT TO MENU', new Vec3(95, -58, 0), 'quitResultToMenu', 170, 48);
+    bind('stageFailed', failureTitle);
+    bind('retry', retryButton.label);
+    bind('quitToMenu', failureQuitButton.label);
+    failureRoot.active = false;
+
+    const completionRoot = this.createOverlay(
+      'CompletionResult',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(3, 4, 5, 224),
+    );
+    const completionPanel = this.createUiRoot('CompletionPanel', completionRoot, 460, 340);
+    this.drawPanel(completionPanel, 460, 340, new Color(25, 27, 31, 252));
+    const completionTitle = this.createLabel('CompletionTitle', 'STAGE COMPLETE', new Vec3(0, 125, 0), 400, 48, 30);
+    completionTitle.color = new Color(154, 202, 193, 255);
+    completionTitle.node.setParent(completionPanel);
+    const completionStatsLabel = this.createLabel('CompletionStats', '', new Vec3(0, 40, 0), 360, 105, 17);
+    completionStatsLabel.lineHeight = 28;
+    completionStatsLabel.node.setParent(completionPanel);
+    const continueButton = this.createButton(completionPanel, 'ContinueButton', 'CONTINUE', new Vec3(0, -48, 0), 'continueAfterComplete', 300, 48);
+    const replayButton = this.createButton(completionPanel, 'ReplayButton', 'REPLAY', new Vec3(-95, -112, 0), 'replayLevel', 170, 44);
+    const completeQuitButton = this.createButton(completionPanel, 'CompleteQuitButton', 'QUIT TO MENU', new Vec3(95, -112, 0), 'quitResultToMenu', 170, 44);
+    bind('stageComplete', completionTitle);
+    bind('replay', replayButton.label);
+    bind('quitToMenu', completeQuitButton.label);
+    completionRoot.active = false;
+
+    const tutorialRoot = this.createOverlay(
+      'Tutorial',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(3, 4, 5, 126),
+    );
+    const tutorialPanelWidth = Math.min(820, visibleSize.width - 40);
+    const tutorialPanel = this.createUiRoot('TutorialPanel', tutorialRoot, tutorialPanelWidth, 190);
+    tutorialPanel.setPosition(0, -visibleSize.height * 0.5 + 115);
+    this.drawPanel(tutorialPanel, tutorialPanelWidth, 190, new Color(20, 22, 26, 250));
+    const tutorialSymbolLabel = this.createBadge(tutorialPanel, 'TutorialBadge', new Vec3(-tutorialPanelWidth * 0.5 + 60, 8, 0));
+    const tutorialTitleLabel = this.createLabel('TutorialTitle', '', new Vec3(55, 54, 0), tutorialPanelWidth - 220, 40, 25);
+    tutorialTitleLabel.horizontalAlign = HorizontalTextAlignment.LEFT;
+    tutorialTitleLabel.node.setParent(tutorialPanel);
+    const tutorialBodyLabel = this.createLabel('TutorialBody', '', new Vec3(55, -2, 0), tutorialPanelWidth - 220, 66, 16);
+    tutorialBodyLabel.horizontalAlign = HorizontalTextAlignment.LEFT;
+    tutorialBodyLabel.lineHeight = 22;
+    tutorialBodyLabel.node.setParent(tutorialPanel);
+    const tutorialProgressLabel = this.createLabel('TutorialProgress', '', new Vec3(-tutorialPanelWidth * 0.5 + 180, -67, 0), 180, 28, 13);
+    tutorialProgressLabel.color = new Color(164, 166, 172, 255);
+    tutorialProgressLabel.node.setParent(tutorialPanel);
+    const tutorialSkipButton = this.createButton(tutorialPanel, 'TutorialSkipButton', 'SKIP', new Vec3(tutorialPanelWidth * 0.5 - 220, -66, 0), 'skipTutorial', 140, 40);
+    const tutorialNextButton = this.createButton(tutorialPanel, 'TutorialNextButton', 'NEXT', new Vec3(tutorialPanelWidth * 0.5 - 70, -66, 0), 'acknowledgeTutorial', 110, 40);
+    bind('skip', tutorialSkipButton.label);
+    tutorialRoot.active = false;
 
     const pauseMenuRoot = this.createOverlay(
       'PauseMenu',
@@ -290,15 +548,15 @@ export class GameplayBootstrap extends Component {
       visibleSize.height,
       new Color(3, 4, 5, 232),
     );
-    const pausePanel = this.createUiRoot('PausePanel', pauseMenuRoot, 380, 320);
-    this.drawPanel(pausePanel, 380, 320, new Color(25, 27, 31, 252));
-    const pauseTitle = this.createLabel('PauseTitle', 'PAUSED', new Vec3(0, 118, 0), 320, 48, 30);
+    const pausePanel = this.createUiRoot('PausePanel', pauseMenuRoot, 380, 390);
+    this.drawPanel(pausePanel, 380, 390, new Color(25, 27, 31, 252));
+    const pauseTitle = this.createLabel('PauseTitle', 'PAUSED', new Vec3(0, 150, 0), 320, 48, 30);
     pauseTitle.node.setParent(pausePanel);
-    this.createButton(
+    const returnButton = this.createButton(
       pausePanel,
       'ReturnButton',
       'RETURN TO GAME',
-      new Vec3(0, 52, 0),
+      new Vec3(0, 78, 0),
       'returnToGame',
       300,
       50,
@@ -307,20 +565,32 @@ export class GameplayBootstrap extends Component {
       pausePanel,
       'SoundButton',
       'TOGGLE SOUND: ON',
-      new Vec3(0, -12, 0),
+      new Vec3(0, 14, 0),
       'toggleSound',
       300,
       50,
     );
-    this.createButton(
+    const pauseLanguageButton = this.createButton(
+      pausePanel,
+      'PauseLanguageButton',
+      'LANGUAGE: ENGLISH',
+      new Vec3(0, -50, 0),
+      'cycleLanguage',
+      300,
+      50,
+    );
+    const quitButton = this.createButton(
       pausePanel,
       'QuitButton',
       'QUIT TO MENU',
-      new Vec3(0, -76, 0),
+      new Vec3(0, -114, 0),
       'quitToMenu',
       300,
       50,
     );
+    bind('paused', pauseTitle);
+    bind('returnToGame', returnButton.label);
+    bind('quitToMenu', quitButton.label);
     pauseMenuRoot.active = false;
 
     return {
@@ -331,27 +601,87 @@ export class GameplayBootstrap extends Component {
       gameplayHudRoot,
       pauseMenuRoot,
       titleMenuRoot,
+      stageSelectRoot,
+      howToPlayRoot,
+      creditsRoot,
+      newGameConfirmRoot,
+      failureRoot,
+      completionRoot,
+      tutorialRoot,
       passcodeInput,
       passcodeFeedback,
       soundToggleLabel: soundButton.label,
+      titleSoundLabel: titleSoundButton.label,
+      titleLanguageLabel: titleLanguageButton.label,
+      pauseLanguageLabel: pauseLanguageButton.label,
+      resumeButton: resume.button,
+      resumeButtonLabel: resume.label,
+      failureReasonLabel,
+      completionStatsLabel,
+      completionContinueLabel: continueButton.label,
+      tutorialTitleLabel,
+      tutorialSymbolLabel,
+      tutorialBodyLabel,
+      tutorialProgressLabel,
+      tutorialNextLabel: tutorialNextButton.label,
+      howTopicTitleLabel,
+      howTopicSymbolLabel,
+      howTopicBodyLabel,
+      howTopicProgressLabel,
       splitControlRoot: splitControl.button.node,
+      stageButtons,
+      stageButtonLabels,
+      localizedLabels,
     };
   }
 
-  private createPasscodeInput(parent: Node, position: Vec3): EditBox {
-    const node = this.createUiRoot('PasscodeInput', parent, 250, 52);
+  private createBadge(parent: Node, name: string, position: Vec3): Label {
+    const node = this.createUiRoot(name, parent, 104, 104);
     node.setPosition(position);
-    this.drawPanel(node, 250, 52, new Color(25, 27, 31, 245));
+    this.drawPanel(node, 104, 104, new Color(43, 45, 50, 252));
+    const label = this.createLabel(`${name}Label`, '', Vec3.ZERO, 92, 92, 14);
+    label.color = new Color(218, 185, 105, 255);
+    label.node.setParent(node);
+    return label;
+  }
 
-    const textLabel = this.createLabel('InputText', '', Vec3.ZERO, 220, 44, 22);
+  private createPasscodeInput(
+    parent: Node,
+    position: Vec3,
+  ): EditBox {
+    const inputWidth = 250;
+    const inputHeight = 52;
+    const horizontalPadding = 2;
+    const node = this.createUiRoot('PasscodeInput', parent, inputWidth, inputHeight);
+    node.active = false;
+    node.setPosition(position);
+    this.drawPanel(node, inputWidth, inputHeight, new Color(25, 27, 31, 245));
+
+    const textLabel = this.createLabel('TEXT_LABEL', '', Vec3.ZERO, inputWidth, inputHeight, 22);
     textLabel.node.setParent(node);
-    const placeholderLabel = this.createLabel('InputPlaceholder', 'PASSCODE', Vec3.ZERO, 220, 44, 18);
+    const placeholderLabel = this.createLabel('PLACEHOLDER_LABEL', 'PASSCODE', Vec3.ZERO, inputWidth, inputHeight, 18);
     placeholderLabel.color = new Color(137, 139, 145, 255);
     placeholderLabel.node.setParent(node);
 
     const editBox = node.addComponent(EditBox);
     editBox.textLabel = textLabel;
     editBox.placeholderLabel = placeholderLabel;
+    textLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
+    placeholderLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
+    for (const label of [textLabel, placeholderLabel]) {
+      const transform = label.node.getComponent(UITransform);
+      label.overflow = Label.Overflow.CLAMP;
+      label.enableWrapText = false;
+      transform?.setAnchorPoint(0, 1);
+      transform?.setContentSize(inputWidth - horizontalPadding, inputHeight);
+      label.node.setPosition(
+        -inputWidth * 0.5 + horizontalPadding,
+        inputHeight * 0.5,
+        label.node.position.z,
+      );
+      label.verticalAlign = VerticalTextAlignment.CENTER;
+    }
+    editBox.string = '';
     editBox.placeholder = 'PASSCODE';
     editBox.maxLength = 4;
     editBox.inputMode = EditBox.InputMode.SINGLE_LINE;
@@ -360,6 +690,7 @@ export class GameplayBootstrap extends Component {
 
     const returnEvent = this.createEventHandler('submitPasscode');
     editBox.editingReturn.push(returnEvent);
+    node.active = true;
     return editBox;
   }
 
@@ -425,6 +756,7 @@ export class GameplayBootstrap extends Component {
     handler: string,
     width: number,
     height: number,
+    customEventData = '',
   ): { button: Button; label: Label } {
     const buttonNode = this.createUiRoot(name, parent, width, height);
     buttonNode.setPosition(position);
@@ -445,18 +777,19 @@ export class GameplayBootstrap extends Component {
     button.transition = Button.Transition.SCALE;
     button.zoomScale = 1.035;
     button.duration = 0.08;
-    button.clickEvents.push(this.createEventHandler(handler));
+    button.clickEvents.push(this.createEventHandler(handler, customEventData));
 
     const label = this.createLabel(`${name}Label`, text, Vec3.ZERO, width - 16, height - 8, 17);
     label.node.setParent(buttonNode);
     return { button, label };
   }
 
-  private createEventHandler(handler: string): EventHandler {
+  private createEventHandler(handler: string, customEventData = ''): EventHandler {
     const event = new EventHandler();
     event.target = this.node;
     event.component = 'GameplayController';
     event.handler = handler;
+    event.customEventData = customEventData;
     return event;
   }
 

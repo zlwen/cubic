@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Quat, tween, Vec3 } from 'cc';
+import { _decorator, Component, Node, Quat, tween, Tween, Vec3 } from 'cc';
 import type { BlockState, Direction, MoveResult, PuzzleState } from './shared/game/index';
 
 const { ccclass, property } = _decorator;
@@ -27,6 +27,33 @@ export class BlockPresenter extends Component {
 
   isBusy(): boolean {
     return this.busy;
+  }
+
+  startAttract(state: PuzzleState): void {
+    this.stopAttract();
+    this.snapTo(state);
+    const node = this.wholeNode;
+    if (!node) return;
+    const restingPosition = node.position.clone();
+    const liftedPosition = restingPosition.clone().add(new Vec3(0, 0.12, 0));
+    const restingRotation = node.rotation.clone();
+    const turn = new Quat();
+    const liftedRotation = new Quat();
+    Quat.fromEuler(turn, 0, 8, 0);
+    Quat.multiply(liftedRotation, turn, restingRotation);
+    tween(node)
+      .repeatForever(
+        tween<Node>()
+          .to(1.15, { position: liftedPosition, rotation: liftedRotation }, { easing: 'sineInOut' })
+          .to(1.15, { position: restingPosition, rotation: restingRotation }, { easing: 'sineInOut' }),
+      )
+      .start();
+  }
+
+  stopAttract(): void {
+    this.resolveNodes();
+    if (this.wholeNode) Tween.stopAllByTarget(this.wholeNode);
+    this.busy = false;
   }
 
   snapTo(state: PuzzleState): void {

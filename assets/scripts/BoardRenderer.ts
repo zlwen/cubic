@@ -142,18 +142,32 @@ export class BoardRenderer extends Component {
 
   private createGoalHole(): Node {
     const hole = new Node('GoalHole');
-    const shaftColor = new Color(4, 5, 7, 255);
+    const shaftColor = new Color(18, 19, 23, 255);
+    const floorColor = new Color(2, 3, 5, 255);
     const rimColor = new Color(105, 108, 116, 255);
-    this.addBox(hole, 'ShaftNorth', new Vec3(0.88, 0.7, 0.035), new Vec3(0, -0.25, -0.45), shaftColor);
-    this.addBox(hole, 'ShaftSouth', new Vec3(0.88, 0.7, 0.035), new Vec3(0, -0.25, 0.45), shaftColor);
-    this.addBox(hole, 'ShaftWest', new Vec3(0.035, 0.7, 0.88), new Vec3(-0.45, -0.25, 0), shaftColor);
-    this.addBox(hole, 'ShaftEast', new Vec3(0.035, 0.7, 0.88), new Vec3(0.45, -0.25, 0), shaftColor);
-    this.addBox(hole, 'ShaftFloor', new Vec3(0.86, 0.025, 0.86), new Vec3(0, -0.62, 0), shaftColor);
-    this.addBox(hole, 'RimNorth', new Vec3(0.94, 0.035, 0.05), new Vec3(0, 0.03, -0.47), rimColor);
-    this.addBox(hole, 'RimSouth', new Vec3(0.94, 0.035, 0.05), new Vec3(0, 0.03, 0.47), rimColor);
-    this.addBox(hole, 'RimWest', new Vec3(0.05, 0.035, 0.84), new Vec3(-0.47, 0.03, 0), rimColor);
-    this.addBox(hole, 'RimEast', new Vec3(0.05, 0.035, 0.84), new Vec3(0.47, 0.03, 0), rimColor);
+    this.addGoalBox(hole, 'ShaftNorth', new Vec3(0.88, 0.7, 0.035), new Vec3(0, -0.25, -0.45), shaftColor);
+    this.addGoalBox(hole, 'ShaftSouth', new Vec3(0.88, 0.7, 0.035), new Vec3(0, -0.25, 0.45), shaftColor);
+    this.addGoalBox(hole, 'ShaftWest', new Vec3(0.035, 0.7, 0.88), new Vec3(-0.45, -0.25, 0), shaftColor);
+    this.addGoalBox(hole, 'ShaftEast', new Vec3(0.035, 0.7, 0.88), new Vec3(0.45, -0.25, 0), shaftColor);
+    this.addGoalBox(hole, 'ShaftFloor', new Vec3(0.86, 0.025, 0.86), new Vec3(0, -0.62, 0), floorColor);
+    this.addGoalBox(hole, 'RimNorth', new Vec3(0.94, 0.035, 0.05), new Vec3(0, 0.03, -0.47), rimColor);
+    this.addGoalBox(hole, 'RimSouth', new Vec3(0.94, 0.035, 0.05), new Vec3(0, 0.03, 0.47), rimColor);
+    this.addGoalBox(hole, 'RimWest', new Vec3(0.05, 0.035, 0.84), new Vec3(-0.47, 0.03, 0), rimColor);
+    this.addGoalBox(hole, 'RimEast', new Vec3(0.05, 0.035, 0.84), new Vec3(0.47, 0.03, 0), rimColor);
     return hole;
+  }
+
+  private addGoalBox(
+    parent: Node,
+    name: string,
+    size: Vec3,
+    position: Vec3,
+    color: Color,
+  ): Node {
+    const node = this.addBox(parent, name, size, position, color);
+    const renderer = node.getComponent(MeshRenderer);
+    if (renderer) renderer.shadowCastingMode = MeshRenderer.ShadowCastingMode.ON;
+    return node;
   }
 
   private addBox(parent: Node, name: string, size: Vec3, position: Vec3, color: Color, material?: Material): Node {

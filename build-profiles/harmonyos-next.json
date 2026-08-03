@@ -6,11 +6,18 @@
   "preferredScriptEngine": "jsvm",
   "orientation": "landscape",
   "deviceTypes": ["phone", "tablet"],
+  "productName": "CUBIC",
+  "bundleName": "me.kk.cubic",
+  "versionName": "1.0.0",
+  "versionCode": 1000000,
+  "compatibleSdkVersion": "5.0.3(15)",
+  "minimumApiVersion": 15,
   "devEcoStudio": "/Applications/DevEco-Studio.app",
   "openharmonySdk": "/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony",
   "notes": [
     "Use Cocos Creator Build panel to export the actual native project.",
     "Open generated HarmonyOS Next project in DevEco Studio for signing and device run.",
-    "Keep platform-specific native changes outside src/game."
+    "Keep platform-specific native changes outside src/game.",
+    "Release permissions should be reduced to VIBRATE unless a reviewed feature requires more."
   ]
 }
