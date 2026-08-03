@@ -240,6 +240,7 @@ export class GameplayBootstrap extends Component {
     const node = existing ?? this.createChild('Key Light');
     const light = node.getComponent(DirectionalLight) ?? node.addComponent(DirectionalLight);
     light.illuminance = 45000;
+    light.csmLevel = 1;
     node.setRotationFromEuler(-45, 35, 0);
     return node;
   }
