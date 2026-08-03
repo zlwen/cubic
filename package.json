@@ -1,0 +1,22 @@
+{
+  "name": "cubic",
+  "version": "3.8.8",
+  "private": true,
+  "description": "Original mobile 3D rolling-block puzzle built with Cocos Creator.",
+  "scripts": {
+    "test": "tsc -p tsconfig.tests.json && node dist-tests/tests/puzzle-engine.test.js",
+    "test:engine": "npm run test",
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck:cocos",
+    "typecheck:cocos": "tsc -p tsconfig.cocos-check.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "creator": {
+    "version": "3.8.8"
+  },
+  "uuid": "1b073428-bcea-4d8d-9948-71dfc65aa9f9"
+}

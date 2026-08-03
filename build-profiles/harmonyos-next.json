@@ -1,0 +1,16 @@
+{
+  "name": "HarmonyOS Next First Playable",
+  "platform": "harmonyos-next",
+  "creatorVersion": "3.8.8",
+  "entryScene": "assets/scenes/Gameplay.scene",
+  "preferredScriptEngine": "jsvm",
+  "orientation": "landscape",
+  "deviceTypes": ["phone", "tablet"],
+  "devEcoStudio": "/Applications/DevEco-Studio.app",
+  "openharmonySdk": "/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony",
+  "notes": [
+    "Use Cocos Creator Build panel to export the actual native project.",
+    "Open generated HarmonyOS Next project in DevEco Studio for signing and device run.",
+    "Keep platform-specific native changes outside src/game."
+  ]
+}
