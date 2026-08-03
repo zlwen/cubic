@@ -89,12 +89,13 @@ export class PuzzleEngine {
     }
 
     if (!this.levelMap.supports(nextCells, this.state.bridgeStates)) {
+      const supportedCells = this.levelMap.supportedCells(nextCells, this.state.bridgeStates);
       return this.commitFailure(previous, direction, {
         ...this.state,
         block: nextBlock,
         split: null,
         steps: this.state.steps + 1,
-      }, nextCells, 'The block fell from the board.');
+      }, nextCells, 'The block fell from the board.', supportedCells);
     }
 
     if (nextBlock.orientation === 'standing'
@@ -104,7 +105,7 @@ export class PuzzleEngine {
         block: nextBlock,
         split: null,
         steps: this.state.steps + 1,
-      }, nextCells, 'The standing block broke a fragile tile.');
+      }, nextCells, 'The standing block broke a fragile tile.', []);
     }
 
     let bridgeStates = this.applyWholeSwitches(nextBlock, this.state.bridgeStates);
@@ -118,13 +119,14 @@ export class PuzzleEngine {
         }
       : null;
     if (split && !this.levelMap.supports(split.cubes, bridgeStates)) {
+      const supportedCells = this.levelMap.supportedCells(split.cubes, bridgeStates);
       return this.commitFailure(previous, direction, {
         ...this.state,
         block: nextBlock,
         split,
         bridgeStates,
         steps: this.state.steps + 1,
-      }, split.cubes, 'A split cube destination is unsupported.');
+      }, split.cubes, 'A split cube destination is unsupported.', supportedCells);
     }
     return this.commit(previous, direction, {
       ...this.state,
@@ -144,11 +146,12 @@ export class PuzzleEngine {
     const cubes = this.cloneCubes(split.cubes);
     cubes[active] = this.moveCube(cubes[active], direction);
     if (!this.levelMap.supports([cubes[active]], this.state.bridgeStates)) {
+      const supportedCells = this.levelMap.supportedCells(cubes, this.state.bridgeStates);
       return this.commitFailure(previous, direction, {
         ...this.state,
         split: { cubes, activeCube: active },
         steps: this.state.steps + 1,
-      }, cubes, 'The active split cube fell from the board.');
+      }, cubes, 'The active split cube fell from the board.', supportedCells);
     }
 
     const bridgeStates = this.applySoftSwitch(cubes[active], this.state.bridgeStates);
@@ -231,12 +234,13 @@ export class PuzzleEngine {
     candidate: PuzzleState,
     cells: readonly GridCoord[],
     message: string,
+    supportedCells: readonly GridCoord[],
   ): MoveResult {
     return this.commit(previous, direction, {
       ...candidate,
       failed: true,
       completed: false,
-    }, 'fallen', cells, message);
+    }, 'fallen', cells, message, supportedCells);
   }
 
   private commit(
@@ -246,6 +250,7 @@ export class PuzzleEngine {
     status: MoveResult['status'],
     cells: readonly GridCoord[],
     message?: string,
+    supportedCells?: readonly GridCoord[],
   ): MoveResult {
     this.history.push(previous);
     this.state = this.cloneState(candidate);
@@ -255,6 +260,7 @@ export class PuzzleEngine {
       previous,
       current: this.getState(),
       occupiedCells: cells.map((cell) => ({ ...cell })),
+      supportedCells: supportedCells?.map((cell) => ({ ...cell })),
       message,
     };
   }

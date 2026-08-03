@@ -49,11 +49,20 @@ export class LevelMap {
   }
 
   supports(cells: readonly GridCoord[], bridgeStates: PuzzleState['bridgeStates']): boolean {
-    return cells.every((cell) => {
-      if (this.hasStaticTile(cell)) return true;
-      const bridgeId = this.bridgeIdByCoord.get(coordKey(cell));
-      return bridgeId ? bridgeStates[bridgeId] === true : false;
-    });
+    return cells.every((cell) => this.supportsCell(cell, bridgeStates));
+  }
+
+  supportedCells(
+    cells: readonly GridCoord[],
+    bridgeStates: PuzzleState['bridgeStates'],
+  ): GridCoord[] {
+    return cells.filter((cell) => this.supportsCell(cell, bridgeStates));
+  }
+
+  private supportsCell(coord: GridCoord, bridgeStates: PuzzleState['bridgeStates']): boolean {
+    if (this.hasStaticTile(coord)) return true;
+    const bridgeId = this.bridgeIdByCoord.get(coordKey(coord));
+    return bridgeId ? bridgeStates[bridgeId] === true : false;
   }
 }
 

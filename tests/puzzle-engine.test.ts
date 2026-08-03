@@ -98,6 +98,7 @@ function testLyingAcrossGoalFalls() {
   assert.equal(engine.getState().completed, false);
   assert.equal(engine.getState().failed, true);
   assert.equal(engine.getState().block.orientation, 'lying-x');
+  assert.deepEqual(result.supportedCells, [{ x: 1, z: 0 }]);
 }
 
 function testFallingIsDeterministic() {
@@ -107,6 +108,7 @@ function testFallingIsDeterministic() {
   assert.equal(result.status, 'fallen');
   assert.equal(engine.getState().failed, true);
   assert.equal(engine.getState().steps, 1);
+  assert.deepEqual(result.supportedCells, []);
 
   const afterFailedMove = engine.move('right');
   assert.equal(afterFailedMove.status, 'invalid');
@@ -258,7 +260,9 @@ function testFragileTileRules() {
   };
   const engine = new PuzzleEngine(level);
   assert.equal(engine.move('right').status, 'moved', 'A lying block should cross fragile support.');
-  assert.equal(engine.move('right').status, 'fallen', 'A standing block should break fragile support.');
+  const result = engine.move('right');
+  assert.equal(result.status, 'fallen', 'A standing block should break fragile support.');
+  assert.deepEqual(result.supportedCells, [], 'A broken fragile tile no longer supports the block.');
 }
 
 function switchBridgeLevel(type: 'soft-switch' | 'hard-switch'): LevelDefinition {

@@ -72,6 +72,7 @@ export interface MoveResult {
   readonly previous: PuzzleState;
   readonly current: PuzzleState;
   readonly occupiedCells: readonly GridCoord[];
+  readonly supportedCells?: readonly GridCoord[];
   readonly message?: string;
 }
 

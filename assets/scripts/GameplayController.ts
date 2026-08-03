@@ -239,7 +239,7 @@ export class GameplayController extends Component {
         this.audioController?.playFall();
         this.platform.vibrateLight();
         this.updateHud();
-        this.block?.playFall(() => this.loadLevel(this.levelIndex));
+        this.block?.playFall(result, () => this.loadLevel(this.levelIndex));
         return;
       }
 

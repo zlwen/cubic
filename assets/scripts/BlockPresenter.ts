@@ -3,6 +3,11 @@ import type { BlockState, Direction, MoveResult, PuzzleState } from './shared/ga
 
 const { ccclass, property } = _decorator;
 
+interface FallEdge {
+  readonly direction: Direction;
+  readonly pivot: Vec3;
+}
+
 @ccclass('BlockPresenter')
 export class BlockPresenter extends Component {
   @property
@@ -62,7 +67,7 @@ export class BlockPresenter extends Component {
     this.playWholeMove(result, onComplete);
   }
 
-  playFall(onComplete: () => void): void {
+  playFall(result: MoveResult, onComplete: () => void): void {
     this.busy = true;
     const node = this.activeVisibleNode();
     if (!node) {
@@ -70,14 +75,105 @@ export class BlockPresenter extends Component {
       onComplete();
       return;
     }
-    const target = node.position.clone().add(new Vec3(0, -2.5, 0));
-    tween(node)
-      .to(0.34, { position: target }, { easing: 'quadIn' })
-      .call(() => {
-        this.busy = false;
-        onComplete();
+
+    const startPosition = node.position.clone();
+    const startRotation = node.rotation.clone();
+    const edge = this.partialSupportEdge(result);
+    if (!edge) {
+      this.playUnsupportedFall(node, startPosition, onComplete);
+      return;
+    }
+
+    const direction = this.directionVector(edge.direction);
+    const axis = this.rotationAxis(edge.direction);
+    const relative = startPosition.clone().subtract(edge.pivot);
+    const tipAngle = Math.PI * 0.4;
+    const tipRotation = new Quat();
+    Quat.fromAxisAngle(tipRotation, axis, tipAngle);
+    const tipOffset = new Vec3();
+    Vec3.transformQuat(tipOffset, relative, tipRotation);
+    const tipPosition = edge.pivot.clone().add(tipOffset);
+    const progress = { value: 0 };
+    const rotationDelta = new Quat();
+    const rotation = new Quat();
+    const position = new Vec3();
+
+    tween(progress)
+      .to(0.68, { value: 1 }, {
+        easing: 'linear',
+        onUpdate: () => {
+          const tipPhase = 0.42;
+          if (progress.value <= tipPhase) {
+            const phase = progress.value / tipPhase;
+            const eased = phase * phase;
+            Quat.fromAxisAngle(rotationDelta, axis, tipAngle * eased);
+            Vec3.transformQuat(position, relative, rotationDelta);
+            position.add(edge.pivot);
+          } else {
+            const phase = (progress.value - tipPhase) / (1 - tipPhase);
+            position.set(tipPosition);
+            Vec3.scaleAndAdd(position, position, direction, 0.85 * phase);
+            position.y -= 3.2 * phase * phase;
+            Quat.fromAxisAngle(rotationDelta, axis, tipAngle + Math.PI * 0.95 * phase);
+          }
+          node.setPosition(position);
+          Quat.multiply(rotation, rotationDelta, startRotation);
+          node.setRotation(rotation);
+        },
       })
+      .call(() => this.finishFall(onComplete))
       .start();
+  }
+
+  private playUnsupportedFall(
+    node: Node,
+    startPosition: Vec3,
+    onComplete: () => void,
+  ): void {
+    const progress = { value: 0 };
+    const position = new Vec3();
+    tween(progress)
+      .to(0.48, { value: 1 }, {
+        easing: 'linear',
+        onUpdate: () => {
+          const phase = progress.value;
+          position.set(startPosition);
+          position.y -= 3.5 * phase * phase;
+          node.setPosition(position);
+        },
+      })
+      .call(() => this.finishFall(onComplete))
+      .start();
+  }
+
+  private partialSupportEdge(result: MoveResult): FallEdge | null {
+    if (result.current.split || result.occupiedCells.length !== 2) return null;
+    const supportedCells = result.supportedCells ?? [];
+    if (supportedCells.length !== 1) return null;
+    const supported = supportedCells[0];
+    const unsupported = result.occupiedCells.find((cell) =>
+      cell.x !== supported.x || cell.z !== supported.z);
+    if (!unsupported) return null;
+
+    let direction: Direction;
+    if (unsupported.x < supported.x) direction = 'left';
+    else if (unsupported.x > supported.x) direction = 'right';
+    else if (unsupported.z < supported.z) direction = 'up';
+    else if (unsupported.z > supported.z) direction = 'down';
+    else return null;
+    return {
+      direction,
+      pivot: new Vec3(
+        (supported.x + unsupported.x) * this.tileSize * 0.5,
+        0,
+        (supported.z + unsupported.z) * this.tileSize * 0.5,
+      ),
+    };
+  }
+
+  private finishFall(onComplete: () => void): void {
+    this.busy = false;
+    onComplete();
   }
 
   playGoalDrop(onComplete: () => void): void {
@@ -115,13 +211,17 @@ export class BlockPresenter extends Component {
     const targetPosition = this.positionFor(target);
     const targetRotation = this.rotationFor(target);
     const direction = this.directionVector(result.direction);
+    const horizontalHalfExtent = this.horizontalHalfExtent(start, result.direction);
+    const verticalHalfExtent = this.verticalHalfExtent(start);
     const pivot = startPosition.clone().add(new Vec3(
-      direction.x * this.horizontalHalfExtent(start, result.direction),
-      -this.verticalHalfExtent(start),
-      direction.z * this.horizontalHalfExtent(start, result.direction),
+      direction.x * horizontalHalfExtent,
+      -verticalHalfExtent,
+      direction.z * horizontalHalfExtent,
     ));
     const relative = startPosition.clone().subtract(pivot);
     const axis = this.rotationAxis(result.direction);
+    const fullyUnsupported = result.status === 'fallen'
+      && (result.supportedCells?.length ?? 0) === 0;
     const progress = { value: 0 };
 
     tween(progress)
@@ -139,6 +239,13 @@ export class BlockPresenter extends Component {
         },
       })
       .call(() => {
+        if (fullyUnsupported) {
+          node.setPosition(targetPosition);
+          node.setRotation(targetRotation);
+          this.busy = false;
+          onComplete();
+          return;
+        }
         node.setPosition(targetPosition);
         node.setRotation(targetRotation);
         this.snapTo(result.current);

@@ -73,10 +73,14 @@ export class BoardRenderer extends Component {
     tileNode.name = `tile-${tile.x}-${tile.z}`;
     if (!this.tilePrefab) {
       const sideColor = tile.type === 'fragile'
-        ? new Color(151, 53, 59, 255)
+        ? new Color(86, 133, 151, 145)
         : tile.type === 'split'
           ? new Color(107, 105, 139, 255)
-          : new Color(178, 181, 188, 255);
+          : tile.type === 'soft-switch'
+            ? new Color(70, 112, 105, 255)
+            : tile.type === 'hard-switch'
+              ? new Color(125, 94, 41, 255)
+              : new Color(157, 162, 172, 255);
       this.addBase(tileNode, sideColor);
       this.createTileTop(tileNode, tile);
     }
@@ -85,30 +89,34 @@ export class BoardRenderer extends Component {
 
   private createTileTop(tileNode: Node, tile: TileDefinition): void {
     if (tile.type === 'fragile') {
-      this.addBox(tileNode, 'FragileTop', new Vec3(0.9, 0.035, 0.9), new Vec3(0, 0.105, 0), new Color(218, 91, 99, 255));
-      const first = this.addBox(tileNode, 'CrackA', new Vec3(0.64, 0.018, 0.035), new Vec3(0, 0.134, 0), new Color(94, 30, 36, 255));
-      const second = this.addBox(tileNode, 'CrackB', new Vec3(0.48, 0.018, 0.035), new Vec3(0.12, 0.135, 0.08), new Color(94, 30, 36, 255));
-      first.setRotationFromEuler(0, 32, 0);
-      second.setRotationFromEuler(0, -52, 0);
+      this.addBox(tileNode, 'FragileTop', new Vec3(0.984, 0.035, 0.984), new Vec3(0, 0.105, 0), new Color(176, 217, 226, 155));
+      const first = this.addBox(tileNode, 'CrackA', new Vec3(0.72, 0.026, 0.055), new Vec3(0, 0.145, 0), new Color(39, 69, 79, 255));
+      const second = this.addBox(tileNode, 'CrackB', new Vec3(0.72, 0.026, 0.055), new Vec3(0, 0.146, 0), new Color(39, 69, 79, 255));
+      first.setRotationFromEuler(0, 45, 0);
+      second.setRotationFromEuler(0, -45, 0);
       return;
     }
 
     const topColor = tile.type === 'split'
       ? new Color(145, 142, 181, 255)
-      : new Color(238, 239, 242, 255);
+      : tile.type === 'soft-switch'
+        ? new Color(154, 202, 193, 255)
+        : tile.type === 'hard-switch'
+          ? new Color(218, 185, 105, 255)
+          : new Color(238, 239, 242, 255);
     this.addBox(
       tileNode,
       'StoneTop',
-      new Vec3(0.9, 0.035, 0.9),
+      new Vec3(0.984, 0.035, 0.984),
       new Vec3(0, 0.105, 0),
       topColor,
     );
 
     if (tile.type === 'soft-switch') {
-      this.addCylinder(tileNode, 'SoftSwitch', 0.24, 0.07, new Vec3(0, 0.165, 0), new Color(82, 84, 90, 255));
+      this.addCylinder(tileNode, 'SoftSwitch', 0.24, 0.07, new Vec3(0, 0.165, 0), new Color(32, 78, 72, 255));
     } else if (tile.type === 'hard-switch') {
-      const first = this.addBox(tileNode, 'HardSwitchA', new Vec3(0.58, 0.045, 0.1), new Vec3(0, 0.16, 0), new Color(65, 67, 73, 255));
-      const second = this.addBox(tileNode, 'HardSwitchB', new Vec3(0.58, 0.045, 0.1), new Vec3(0, 0.162, 0), new Color(65, 67, 73, 255));
+      const first = this.addBox(tileNode, 'HardSwitchA', new Vec3(0.58, 0.045, 0.1), new Vec3(0, 0.16, 0), new Color(91, 58, 15, 255));
+      const second = this.addBox(tileNode, 'HardSwitchB', new Vec3(0.58, 0.045, 0.1), new Vec3(0, 0.162, 0), new Color(91, 58, 15, 255));
       first.setRotationFromEuler(0, 45, 0);
       second.setRotationFromEuler(0, -45, 0);
     } else if (tile.type === 'split') {
@@ -120,14 +128,14 @@ export class BoardRenderer extends Component {
 
   private createBridgeTile(id: string): Node {
     const node = new Node(`bridge-${id}`);
-    this.addBase(node, new Color(143, 13, 22, 255));
-    this.addBox(node, 'BridgeTop', new Vec3(0.9, 0.045, 0.9), new Vec3(0, 0.11, 0), new Color(205, 18, 28, 255));
+    this.addBase(node, new Color(40, 80, 91, 255));
+    this.addBox(node, 'BridgeTop', new Vec3(0.984, 0.045, 0.984), new Vec3(0, 0.11, 0), new Color(78, 151, 159, 255));
     return node;
   }
 
   private addBase(parent: Node, color: Color): void {
     const renderer = parent.addComponent(MeshRenderer);
-    renderer.mesh = utils.createMesh(primitives.box({ width: 0.94, height: 0.2, length: 0.94 }));
+    renderer.mesh = utils.createMesh(primitives.box({ width: 1, height: 0.2, length: 1 }));
     renderer.setMaterial(this.getLitMaterial(color), 0);
     this.configureShadowReceiver(renderer);
   }
@@ -177,7 +185,7 @@ export class BoardRenderer extends Component {
     const baseMaterial = this.litBaseMaterial;
     if (!baseMaterial) throw new Error('Board lit material is not assigned');
     const material = new Material();
-    material.copy(baseMaterial);
+    material.copy(baseMaterial, { technique: color.a < 255 ? 1 : 0 });
     material.setProperty('mainColor', color);
     material.setProperty('roughness', 0.88);
     material.setProperty('metallic', 0);

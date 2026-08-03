@@ -96,24 +96,32 @@ export class GameplayBootstrap extends Component {
   private createBlock(): Node {
     const node = this.createChild('Block');
     const blockMaterial = this.createLitMaterial(new Color(205, 18, 28, 255), 0.72);
+    const edgeMaterial = this.createLitMaterial(new Color(190, 190, 190, 255), 0.68);
     const whole = new Node('WholeBlock');
     whole.setParent(node);
     const renderer = whole.addComponent(MeshRenderer);
     renderer.mesh = utils.createMesh(primitives.box({ width: 0.9, height: 2, length: 0.9 }));
     renderer.setMaterial(blockMaterial, 0);
     this.configureBlockShadows(renderer);
-    this.createSplitCube(node, 'SplitCubeA', blockMaterial);
-    this.createSplitCube(node, 'SplitCubeB', blockMaterial);
+    this.createBlockEdges(whole, 0.9, 2, edgeMaterial);
+    this.createSplitCube(node, 'SplitCubeA', blockMaterial, edgeMaterial);
+    this.createSplitCube(node, 'SplitCubeB', blockMaterial, edgeMaterial);
     return node;
   }
 
-  private createSplitCube(parent: Node, name: string, material: Material): void {
+  private createSplitCube(
+    parent: Node,
+    name: string,
+    material: Material,
+    edgeMaterial: Material,
+  ): void {
     const cube = new Node(name);
     cube.setParent(parent);
     const renderer = cube.addComponent(MeshRenderer);
     renderer.mesh = utils.createMesh(primitives.box({ width: 0.88, height: 0.88, length: 0.88 }));
     renderer.setMaterial(material, 0);
     this.configureBlockShadows(renderer);
+    this.createBlockEdges(cube, 0.88, 0.88, edgeMaterial);
     const marker = new Node('SelectionMarker');
     marker.setParent(cube);
     marker.setPosition(0, 0.455, 0);
@@ -121,6 +129,35 @@ export class GameplayBootstrap extends Component {
     markerRenderer.mesh = utils.createMesh(primitives.box({ width: 0.48, height: 0.025, length: 0.48 }));
     markerRenderer.setMaterial(this.createFlatMaterial(new Color(229, 229, 238, 255)), 0);
     cube.active = false;
+  }
+
+  private createBlockEdges(parent: Node, width: number, height: number, material: Material): void {
+    const thickness = 0.012;
+    const side = width * 0.5 - thickness * 0.2;
+    const top = height * 0.5 - thickness * 0.2;
+    for (const x of [-side, side]) {
+      for (const z of [-side, side]) {
+        this.createBlockEdge(parent, new Vec3(thickness, height, thickness), new Vec3(x, 0, z), material);
+      }
+    }
+    for (const y of [-top, top]) {
+      for (const z of [-side, side]) {
+        this.createBlockEdge(parent, new Vec3(width, thickness, thickness), new Vec3(0, y, z), material);
+      }
+      for (const x of [-side, side]) {
+        this.createBlockEdge(parent, new Vec3(thickness, thickness, width), new Vec3(x, y, 0), material);
+      }
+    }
+  }
+
+  private createBlockEdge(parent: Node, size: Vec3, position: Vec3, material: Material): void {
+    const edge = new Node('BlockEdge');
+    edge.setParent(parent);
+    edge.setPosition(position);
+    const renderer = edge.addComponent(MeshRenderer);
+    renderer.mesh = utils.createMesh(primitives.box({ width: size.x, height: size.y, length: size.z }));
+    renderer.setMaterial(material, 0);
+    this.configureBlockShadows(renderer);
   }
 
   private createCamera(): Node {
