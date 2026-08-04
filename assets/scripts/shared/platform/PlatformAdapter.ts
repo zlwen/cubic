@@ -1,4 +1,4 @@
-import { native, sys } from 'cc';
+import { sys } from 'cc';
 
 export interface Insets {
   readonly top: number;
@@ -24,17 +24,7 @@ export class DefaultPlatformAdapter implements PlatformAdapter {
 
   vibrateLight(): void {
     if (sys.isNative && sys.os === sys.OS.OPENHARMONY) {
-      try {
-        const started = native.reflection.callStaticMethod(
-          'entry/src/main/ets/Haptics',
-          'entry/vibrateLight',
-          '',
-          true,
-        );
-        console.info(`HarmonyOS vibration bridge returned: ${String(started)}`);
-      } catch (error) {
-        console.warn('HarmonyOS vibration bridge failed.', error);
-      }
+      // A missing synchronous ArkTS reflection target blocks Cocos' script thread.
       return;
     }
 
