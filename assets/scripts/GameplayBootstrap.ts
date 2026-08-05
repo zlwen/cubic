@@ -16,9 +16,11 @@ import {
   MeshRenderer,
   Node,
   primitives,
+  resources,
   Sprite,
   SpriteFrame,
   Texture2D,
+  TTFFont,
   UITransform,
   utils,
   Vec3,
@@ -33,6 +35,7 @@ import { CameraController } from './CameraController';
 import { GameplayController } from './GameplayController';
 import { MobileSafeArea } from './MobileSafeArea';
 import { TouchInputController } from './TouchInputController';
+import { UiButtonVisual, type UiButtonPalette } from './UiButtonVisual';
 import type { UiTextKey } from './shared/game/index';
 
 const { ccclass, property } = _decorator;
@@ -78,14 +81,37 @@ interface GameplayUi {
   readonly localizedLabels: Partial<Record<UiTextKey, Label[]>>;
 }
 
+type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'danger' | 'stage';
+type LabelFontRole = 'ui' | 'display';
+
 @ccclass('GameplayBootstrap')
 export class GameplayBootstrap extends Component {
   @property(Material)
   litBaseMaterial: Material | null = null;
 
   private solidSpriteFrame: SpriteFrame | null = null;
+  private uiFont: TTFFont | null = null;
+  private displayFont: TTFFont | null = null;
 
   start(): void {
+    let pending = 2;
+    const complete = (): void => {
+      pending -= 1;
+      if (pending === 0) this.initialize();
+    };
+    resources.load('fonts/NotoSansSC-Medium', TTFFont, (error, font) => {
+      if (error) console.warn('UI font failed to load.', error);
+      else this.uiFont = font;
+      complete();
+    });
+    resources.load('fonts/Oxanium-SemiBold', TTFFont, (error, font) => {
+      if (error) console.warn('Display font failed to load.', error);
+      else this.displayFont = font;
+      complete();
+    });
+  }
+
+  private initialize(): void {
     const boardRoot = this.createChild('BoardRoot');
     const blockRoot = this.createBlock();
     this.createVoidBackdrop();
@@ -292,6 +318,8 @@ export class GameplayBootstrap extends Component {
       'openMenu',
       126,
       48,
+      '',
+      'subtle',
     );
     bind('menu', menuButton.label);
     this.alignCorner(menuButton.button.node, 'left');
@@ -330,7 +358,7 @@ export class GameplayBootstrap extends Component {
     titleBand.setPosition(-visibleSize.width * 0.5 + 195, 0);
     this.drawPanel(titleBand, 390, visibleSize.height, new Color(12, 14, 17, 238));
     const titleY = Math.min(205, visibleSize.height * 0.32);
-    const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(0, titleY, 0), 350, 74, 58);
+    const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(0, titleY, 0), 350, 74, 58, 'display');
     title.node.setParent(titleBand);
     const subtitle = this.createLabel(
       'GameSubtitle',
@@ -343,13 +371,13 @@ export class GameplayBootstrap extends Component {
     subtitle.color = new Color(164, 166, 172, 255);
     subtitle.node.setParent(titleBand);
     bind('gameSubtitle', subtitle);
-    const startButton = this.createButton(titleBand, 'StartButton', 'START NEW GAME', new Vec3(0, 82, 0), 'startGame', 300, 42);
+    const startButton = this.createButton(titleBand, 'StartButton', 'START NEW GAME', new Vec3(0, 82, 0), 'startGame', 300, 42, '', 'primary');
     const resume = this.createButton(titleBand, 'ResumeButton', 'RESUME GAME', new Vec3(0, 32, 0), 'resumeGame', 300, 42);
     const loadStageButton = this.createButton(titleBand, 'LoadStageButton', 'LOAD STAGE', new Vec3(0, -18, 0), 'openStageSelect', 300, 42);
     const howToButton = this.createButton(titleBand, 'HowToButton', 'HOW TO PLAY', new Vec3(0, -68, 0), 'showHowToPlay', 300, 42);
-    const titleSoundButton = this.createButton(titleBand, 'TitleSoundButton', 'TOGGLE SOUND: ON', new Vec3(0, -118, 0), 'toggleSound', 300, 42);
-    const titleLanguageButton = this.createButton(titleBand, 'TitleLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -168, 0), 'cycleLanguage', 300, 42);
-    const creditsButton = this.createButton(titleBand, 'CreditsButton', 'CREDITS', new Vec3(0, -218, 0), 'showCredits', 300, 42);
+    const titleSoundButton = this.createButton(titleBand, 'TitleSoundButton', 'TOGGLE SOUND: ON', new Vec3(0, -118, 0), 'toggleSound', 300, 42, '', 'subtle');
+    const titleLanguageButton = this.createButton(titleBand, 'TitleLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -168, 0), 'cycleLanguage', 300, 42, '', 'subtle');
+    const creditsButton = this.createButton(titleBand, 'CreditsButton', 'CREDITS', new Vec3(0, -218, 0), 'showCredits', 300, 42, '', 'subtle');
     bind('startNewGame', startButton.label);
     bind('loadStage', loadStageButton.label);
     bind('howToPlay', howToButton.label);
@@ -379,12 +407,13 @@ export class GameplayBootstrap extends Component {
         52,
         42,
         String(index),
+        'stage',
       );
       stageButtons.push(stageButton.button);
       stageButtonLabels.push(stageButton.label);
     }
     const passcodeInput = this.createPasscodeInput(stageSelectRoot, new Vec3(-70, -96, 0));
-    const passcodeButton = this.createButton(stageSelectRoot, 'PasscodeButton', 'ENTER', new Vec3(145, -96, 0), 'submitPasscode', 140, 52);
+    const passcodeButton = this.createButton(stageSelectRoot, 'PasscodeButton', 'ENTER', new Vec3(145, -96, 0), 'submitPasscode', 140, 52, '', 'primary');
     bind('enter', passcodeButton.label);
     const passcodeFeedback = this.createLabel(
       'PasscodeFeedback',
@@ -396,7 +425,7 @@ export class GameplayBootstrap extends Component {
     );
     passcodeFeedback.color = new Color(218, 91, 99, 255);
     passcodeFeedback.node.setParent(stageSelectRoot);
-    const stageBackButton = this.createButton(stageSelectRoot, 'StageBackButton', 'BACK', new Vec3(0, -196, 0), 'returnToTitle', 180, 44);
+    const stageBackButton = this.createButton(stageSelectRoot, 'StageBackButton', 'BACK', new Vec3(0, -196, 0), 'returnToTitle', 180, 44, '', 'subtle');
     bind('back', stageBackButton.label);
     stageSelectRoot.active = false;
 
@@ -422,8 +451,8 @@ export class GameplayBootstrap extends Component {
     howTopicProgressLabel.color = new Color(164, 166, 172, 255);
     howTopicProgressLabel.node.setParent(howToPlayRoot);
     const howPreviousButton = this.createButton(howToPlayRoot, 'HowPreviousButton', 'PREVIOUS', new Vec3(-150, -155, 0), 'previousHowTopic', 220, 44);
-    const howNextButton = this.createButton(howToPlayRoot, 'HowNextButton', 'NEXT', new Vec3(150, -155, 0), 'nextHowTopic', 220, 44);
-    const howBackButton = this.createButton(howToPlayRoot, 'HowBackButton', 'BACK', new Vec3(0, -205, 0), 'returnToTitle', 180, 44);
+    const howNextButton = this.createButton(howToPlayRoot, 'HowNextButton', 'NEXT', new Vec3(150, -155, 0), 'nextHowTopic', 220, 44, '', 'primary');
+    const howBackButton = this.createButton(howToPlayRoot, 'HowBackButton', 'BACK', new Vec3(0, -205, 0), 'returnToTitle', 180, 44, '', 'subtle');
     bind('previous', howPreviousButton.label);
     bind('next', howNextButton.label);
     bind('back', howBackButton.label);
@@ -450,7 +479,7 @@ export class GameplayBootstrap extends Component {
     creditsCopy.lineHeight = 28;
     creditsCopy.node.setParent(creditsRoot);
     bind('creditsCopy', creditsCopy);
-    const creditsBackButton = this.createButton(creditsRoot, 'CreditsBackButton', 'BACK', new Vec3(0, -155, 0), 'returnToTitle', 180, 44);
+    const creditsBackButton = this.createButton(creditsRoot, 'CreditsBackButton', 'BACK', new Vec3(0, -155, 0), 'returnToTitle', 180, 44, '', 'subtle');
     bind('back', creditsBackButton.label);
     creditsRoot.active = false;
 
@@ -468,7 +497,7 @@ export class GameplayBootstrap extends Component {
     const confirmCopy = this.createLabel('ConfirmCopy', 'CURRENT CAMPAIGN PROGRESS WILL RESET.', new Vec3(0, 25, 0), 380, 34, 14);
     confirmCopy.color = new Color(174, 177, 184, 255);
     confirmCopy.node.setParent(confirmPanel);
-    const confirmNewButton = this.createButton(confirmPanel, 'ConfirmNewButton', 'START', new Vec3(-95, -58, 0), 'confirmNewGame', 170, 48);
+    const confirmNewButton = this.createButton(confirmPanel, 'ConfirmNewButton', 'START', new Vec3(-95, -58, 0), 'confirmNewGame', 170, 48, '', 'danger');
     const cancelNewButton = this.createButton(confirmPanel, 'CancelNewButton', 'CANCEL', new Vec3(95, -58, 0), 'cancelNewGame', 170, 48);
     bind('confirmNewGameTitle', confirmTitle);
     bind('confirmNewGameCopy', confirmCopy);
@@ -490,8 +519,8 @@ export class GameplayBootstrap extends Component {
     failureTitle.node.setParent(failurePanel);
     const failureReasonLabel = this.createLabel('FailureReason', 'FELL INTO THE VOID', new Vec3(0, 30, 0), 360, 34, 15);
     failureReasonLabel.node.setParent(failurePanel);
-    const retryButton = this.createButton(failurePanel, 'RetryButton', 'RETRY', new Vec3(-95, -58, 0), 'retryLevel', 170, 48);
-    const failureQuitButton = this.createButton(failurePanel, 'FailureQuitButton', 'QUIT TO MENU', new Vec3(95, -58, 0), 'quitResultToMenu', 170, 48);
+    const retryButton = this.createButton(failurePanel, 'RetryButton', 'RETRY', new Vec3(-95, -58, 0), 'retryLevel', 170, 48, '', 'primary');
+    const failureQuitButton = this.createButton(failurePanel, 'FailureQuitButton', 'QUIT TO MENU', new Vec3(95, -58, 0), 'quitResultToMenu', 170, 48, '', 'danger');
     bind('stageFailed', failureTitle);
     bind('retry', retryButton.label);
     bind('quitToMenu', failureQuitButton.label);
@@ -512,9 +541,9 @@ export class GameplayBootstrap extends Component {
     const completionStatsLabel = this.createLabel('CompletionStats', '', new Vec3(0, 40, 0), 360, 105, 17);
     completionStatsLabel.lineHeight = 28;
     completionStatsLabel.node.setParent(completionPanel);
-    const continueButton = this.createButton(completionPanel, 'ContinueButton', 'CONTINUE', new Vec3(0, -48, 0), 'continueAfterComplete', 300, 48);
+    const continueButton = this.createButton(completionPanel, 'ContinueButton', 'CONTINUE', new Vec3(0, -48, 0), 'continueAfterComplete', 300, 48, '', 'primary');
     const replayButton = this.createButton(completionPanel, 'ReplayButton', 'REPLAY', new Vec3(-95, -112, 0), 'replayLevel', 170, 44);
-    const completeQuitButton = this.createButton(completionPanel, 'CompleteQuitButton', 'QUIT TO MENU', new Vec3(95, -112, 0), 'quitResultToMenu', 170, 44);
+    const completeQuitButton = this.createButton(completionPanel, 'CompleteQuitButton', 'QUIT TO MENU', new Vec3(95, -112, 0), 'quitResultToMenu', 170, 44, '', 'danger');
     bind('stageComplete', completionTitle);
     bind('replay', replayButton.label);
     bind('quitToMenu', completeQuitButton.label);
@@ -542,8 +571,8 @@ export class GameplayBootstrap extends Component {
     const tutorialProgressLabel = this.createLabel('TutorialProgress', '', new Vec3(-tutorialPanelWidth * 0.5 + 180, -67, 0), 180, 28, 13);
     tutorialProgressLabel.color = new Color(164, 166, 172, 255);
     tutorialProgressLabel.node.setParent(tutorialPanel);
-    const tutorialSkipButton = this.createButton(tutorialPanel, 'TutorialSkipButton', 'SKIP', new Vec3(tutorialPanelWidth * 0.5 - 220, -66, 0), 'skipTutorial', 140, 40);
-    const tutorialNextButton = this.createButton(tutorialPanel, 'TutorialNextButton', 'NEXT', new Vec3(tutorialPanelWidth * 0.5 - 70, -66, 0), 'acknowledgeTutorial', 110, 40);
+    const tutorialSkipButton = this.createButton(tutorialPanel, 'TutorialSkipButton', 'SKIP', new Vec3(tutorialPanelWidth * 0.5 - 220, -66, 0), 'skipTutorial', 140, 40, '', 'subtle');
+    const tutorialNextButton = this.createButton(tutorialPanel, 'TutorialNextButton', 'NEXT', new Vec3(tutorialPanelWidth * 0.5 - 70, -66, 0), 'acknowledgeTutorial', 110, 40, '', 'primary');
     bind('skip', tutorialSkipButton.label);
     tutorialRoot.active = false;
 
@@ -566,6 +595,8 @@ export class GameplayBootstrap extends Component {
       'returnToGame',
       300,
       50,
+      '',
+      'primary',
     );
     const soundButton = this.createButton(
       pausePanel,
@@ -593,6 +624,8 @@ export class GameplayBootstrap extends Component {
       'quitToMenu',
       300,
       50,
+      '',
+      'danger',
     );
     bind('paused', pauseTitle);
     bind('returnToGame', returnButton.label);
@@ -663,7 +696,7 @@ export class GameplayBootstrap extends Component {
     node.setPosition(position);
     this.drawPanel(node, inputWidth, inputHeight, new Color(25, 27, 31, 245));
 
-    const textLabel = this.createLabel('TEXT_LABEL', '', Vec3.ZERO, inputWidth, inputHeight, 22);
+    const textLabel = this.createLabel('TEXT_LABEL', '', Vec3.ZERO, inputWidth, inputHeight, 22, 'display');
     textLabel.node.setParent(node);
     const placeholderLabel = this.createLabel('PLACEHOLDER_LABEL', 'PASSCODE', Vec3.ZERO, inputWidth, inputHeight, 18);
     placeholderLabel.color = new Color(137, 139, 145, 255);
@@ -728,6 +761,7 @@ export class GameplayBootstrap extends Component {
     width: number,
     height: number,
     fontSize: number,
+    fontRole: LabelFontRole = 'ui',
   ): Label {
     const node = new Node(name);
     node.layer = Layers.Enum.UI_2D;
@@ -735,6 +769,7 @@ export class GameplayBootstrap extends Component {
     node.setPosition(position);
     const label = node.addComponent(Label);
     label.string = text;
+    label.font = fontRole === 'display' ? this.displayFont : this.uiFont;
     label.fontSize = fontSize;
     label.lineHeight = fontSize + 4;
     label.horizontalAlign = HorizontalTextAlignment.CENTER;
@@ -760,30 +795,133 @@ export class GameplayBootstrap extends Component {
     width: number,
     height: number,
     customEventData = '',
+    variant: ButtonVariant = 'secondary',
   ): { button: Button; label: Label } {
     const buttonNode = this.createUiRoot(name, parent, width, height);
     buttonNode.setPosition(position);
-    this.createSolidRect(buttonNode, 'Border', width, height, new Color(105, 108, 116, 255));
-    this.createSolidRect(buttonNode, 'Fill', width - 2, height - 2, new Color(43, 45, 50, 246));
-    this.createSolidRect(
+    const palette = this.createButtonPalette(variant);
+    const borderSprites = this.createChamferedRect(
       buttonNode,
-      'Highlight',
-      width - 4,
-      2,
-      new Color(174, 177, 184, 255),
-      new Vec3(0, height * 0.5 - 3, 0),
+      'Border',
+      width,
+      height,
+      palette.border,
+    );
+    const fillSprites = this.createChamferedRect(
+      buttonNode,
+      'Fill',
+      width - 3,
+      height - 3,
+      palette.fill,
+    );
+    const accent = this.createSolidRect(
+      buttonNode,
+      'Accent',
+      variant === 'stage' ? 2 : 3,
+      Math.max(12, height - 18),
+      palette.accent,
+      new Vec3(-width * 0.5 + 8, 0, 0),
     );
 
     const button = buttonNode.addComponent(Button);
     button.target = buttonNode;
-    button.transition = Button.Transition.SCALE;
-    button.zoomScale = 1.035;
-    button.duration = 0.08;
+    button.transition = Button.Transition.NONE;
     button.clickEvents.push(this.createEventHandler(handler, customEventData));
 
-    const label = this.createLabel(`${name}Label`, text, Vec3.ZERO, width - 16, height - 8, 17);
+    const label = this.createLabel(
+      `${name}Label`,
+      text,
+      Vec3.ZERO,
+      width - 20,
+      height - 8,
+      variant === 'stage' ? 16 : 17,
+      variant === 'stage' ? 'display' : 'ui',
+    );
     label.node.setParent(buttonNode);
+    buttonNode.addComponent(UiButtonVisual).setup(
+      button,
+      label,
+      fillSprites,
+      borderSprites,
+      [accent],
+      palette,
+    );
     return { button, label };
+  }
+
+  private createButtonPalette(variant: ButtonVariant): UiButtonPalette {
+    const disabledFill = new Color(39, 42, 47, 245);
+    const disabledBorder = new Color(67, 72, 79, 235);
+    const disabledText = new Color(112, 116, 124, 255);
+    const disabledAccent = new Color(76, 80, 87, 220);
+    if (variant === 'primary') {
+      return {
+        fill: new Color(154, 36, 45, 252),
+        hoverFill: new Color(181, 46, 55, 255),
+        pressedFill: new Color(122, 26, 35, 255),
+        disabledFill,
+        border: new Color(220, 84, 91, 255),
+        disabledBorder,
+        text: new Color(250, 246, 239, 255),
+        disabledText,
+        accent: new Color(230, 188, 101, 255),
+        disabledAccent,
+      };
+    }
+    if (variant === 'danger') {
+      return {
+        fill: new Color(64, 28, 34, 252),
+        hoverFill: new Color(86, 34, 42, 255),
+        pressedFill: new Color(47, 22, 27, 255),
+        disabledFill,
+        border: new Color(151, 61, 69, 255),
+        disabledBorder,
+        text: new Color(238, 174, 178, 255),
+        disabledText,
+        accent: new Color(218, 91, 99, 255),
+        disabledAccent,
+      };
+    }
+    if (variant === 'subtle') {
+      return {
+        fill: new Color(20, 23, 27, 238),
+        hoverFill: new Color(32, 36, 42, 252),
+        pressedFill: new Color(14, 17, 20, 255),
+        disabledFill,
+        border: new Color(66, 72, 81, 235),
+        disabledBorder,
+        text: new Color(198, 201, 207, 255),
+        disabledText,
+        accent: new Color(112, 119, 129, 255),
+        disabledAccent,
+      };
+    }
+    if (variant === 'stage') {
+      return {
+        fill: new Color(28, 32, 37, 250),
+        hoverFill: new Color(43, 48, 55, 255),
+        pressedFill: new Color(19, 22, 26, 255),
+        disabledFill,
+        border: new Color(86, 93, 103, 245),
+        disabledBorder,
+        text: new Color(240, 239, 235, 255),
+        disabledText,
+        accent: new Color(218, 185, 105, 255),
+        disabledAccent,
+      };
+    }
+    return {
+      fill: new Color(34, 38, 44, 250),
+      hoverFill: new Color(47, 52, 60, 255),
+      pressedFill: new Color(25, 29, 34, 255),
+      disabledFill,
+      border: new Color(103, 111, 123, 250),
+      disabledBorder,
+      text: new Color(242, 240, 235, 255),
+      disabledText,
+      accent: new Color(164, 173, 184, 255),
+      disabledAccent,
+    };
   }
 
   private createEventHandler(handler: string, customEventData = ''): EventHandler {
@@ -796,8 +934,66 @@ export class GameplayBootstrap extends Component {
   }
 
   private drawPanel(node: Node, width: number, height: number, color: Color): void {
-    this.createSolidRect(node, 'Border', width, height, new Color(92, 95, 102, 230));
-    this.createSolidRect(node, 'Fill', width - 2, height - 2, color);
+    this.createChamferedRect(node, 'Border', width, height, new Color(92, 99, 110, 235));
+    this.createChamferedRect(node, 'Fill', width - 3, height - 3, color);
+    this.createSolidRect(
+      node,
+      'PanelAccent',
+      Math.min(58, width * 0.2),
+      2,
+      new Color(190, 63, 70, 245),
+      new Vec3(-width * 0.5 + Math.min(42, width * 0.14), height * 0.5 - 5, 0),
+    );
+  }
+
+  private createChamferedRect(
+    parent: Node,
+    name: string,
+    width: number,
+    height: number,
+    color: Color,
+  ): Sprite[] {
+    const root = this.createUiRoot(name, parent, width, height);
+    const chamfer = Math.min(7, Math.max(3, Math.floor(Math.min(width, height) * 0.14)));
+    const capHeight = 2;
+    const shoulderHeight = chamfer - capHeight;
+    const capY = height * 0.5 - capHeight * 0.5;
+    const shoulderY = height * 0.5 - capHeight - shoulderHeight * 0.5;
+    return [
+      this.createSolidRect(
+        root,
+        'TopCap',
+        width - chamfer * 2,
+        capHeight,
+        color,
+        new Vec3(0, capY, 0),
+      ),
+      this.createSolidRect(
+        root,
+        'TopShoulder',
+        width - chamfer,
+        shoulderHeight,
+        color,
+        new Vec3(0, shoulderY, 0),
+      ),
+      this.createSolidRect(root, 'Center', width, height - chamfer * 2, color),
+      this.createSolidRect(
+        root,
+        'BottomShoulder',
+        width - chamfer,
+        shoulderHeight,
+        color,
+        new Vec3(0, -shoulderY, 0),
+      ),
+      this.createSolidRect(
+        root,
+        'BottomCap',
+        width - chamfer * 2,
+        capHeight,
+        color,
+        new Vec3(0, -capY, 0),
+      ),
+    ];
   }
 
   private createSolidRect(

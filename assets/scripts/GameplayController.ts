@@ -705,7 +705,6 @@ export class GameplayController extends Component {
       const label = this.stageButtonLabels[index];
       if (label) {
         label.string = unlocked ? this.twoDigits(index + 1) : '--';
-        label.color.set(unlocked ? 241 : 104, unlocked ? 242 : 107, unlocked ? 245 : 114, 255);
       }
     });
   }
@@ -719,7 +718,6 @@ export class GameplayController extends Component {
           stage: this.twoDigits(resumed.levelIndex + 1),
         })
         : translate(this.saveData.language, 'resumeGame');
-      this.resumeButtonLabel.color.set(resumed ? 245 : 104, resumed ? 242 : 107, resumed ? 236 : 114, 255);
     }
     this.updateSoundLabels();
   }
