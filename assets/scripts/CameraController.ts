@@ -9,7 +9,7 @@ export class CameraController extends Component {
   @property(Camera)
   camera: Camera | null = null;
 
-  frameLevel(level: LevelDefinition): void {
+  frameLevel(level: LevelDefinition, horizontalScreenOffset = 0): void {
     const cells = [
       ...level.tiles,
       ...((level.bridges ?? []).reduce<Array<{ x: number; z: number }>>(
@@ -28,21 +28,42 @@ export class CameraController extends Component {
     const target = new Vec3(centerX, 0, centerZ);
 
     // This fixed offset gives approximately 34 degrees pitch and 18 degrees yaw.
-    const position = target.clone().add(new Vec3(-6, 13, -18));
+    const cameraOffset = new Vec3(-6, 13, -18);
+    const basePosition = target.clone().add(cameraOffset);
+    const orthoHeight = this.orthoHeightForBounds(
+      bounds,
+      target,
+      basePosition,
+      horizontalScreenOffset,
+    );
+    const visible = view.getVisibleSize();
+    const aspect = Math.max(1, visible.width / visible.height);
+    const forward = target.clone().subtract(basePosition).normalize();
+    const right = new Vec3();
+    Vec3.cross(right, forward, Vec3.UP).normalize();
+    const framedTarget = new Vec3();
+    Vec3.scaleAndAdd(
+      framedTarget,
+      target,
+      right,
+      -orthoHeight * aspect * horizontalScreenOffset,
+    );
+    const position = framedTarget.clone().add(cameraOffset);
     this.node.setPosition(position);
-    this.node.lookAt(target, Vec3.UP);
+    this.node.lookAt(framedTarget, Vec3.UP);
 
     if (!this.camera) {
       return;
     }
     this.camera.projection = Camera.ProjectionType.ORTHO;
-    this.camera.orthoHeight = this.orthoHeightForBounds(bounds, target, position);
+    this.camera.orthoHeight = orthoHeight;
   }
 
   private orthoHeightForBounds(
     bounds: ReturnType<typeof boundsForCells>,
     target: Vec3,
     cameraPosition: Vec3,
+    horizontalScreenOffset: number,
   ): number {
     const forward = target.clone().subtract(cameraPosition).normalize();
     const right = new Vec3();
@@ -70,7 +91,8 @@ export class CameraController extends Component {
     const visible = view.getVisibleSize();
     const aspect = Math.max(1, visible.width / visible.height);
     const verticalWithMargin = verticalExtent + 0.9;
-    const horizontalWithMargin = horizontalExtent / aspect + 0.9;
+    const visibleHorizontalRatio = Math.max(0.35, 1 - Math.abs(horizontalScreenOffset));
+    const horizontalWithMargin = horizontalExtent / (aspect * visibleHorizontalRatio) + 0.9;
     return Math.max(3.4, verticalWithMargin, horizontalWithMargin);
   }
 }

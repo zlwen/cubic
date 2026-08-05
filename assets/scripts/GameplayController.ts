@@ -11,6 +11,7 @@ import {
   KeyCode,
   Label,
   Node,
+  view,
 } from 'cc';
 import {
   createDefaultReleaseSave,
@@ -44,6 +45,13 @@ import { ReleaseSaveRepository } from './ReleaseSaveRepository';
 import { TouchInputController } from './TouchInputController';
 
 const { ccclass, property } = _decorator;
+
+const oppositeDirection: Record<Direction, Direction> = {
+  up: 'down',
+  down: 'up',
+  left: 'right',
+  right: 'left',
+};
 
 type GameMode =
   | 'title'
@@ -195,6 +203,9 @@ export class GameplayController extends Component {
   private tutorialQueue: OnboardingTopic[] = [];
   private tutorialTotal = 0;
   private howTopicIndex = 0;
+  private titleAttractEngine: PuzzleEngine | null = null;
+  private titleAttractRoute: readonly Direction[] = [];
+  private titleAttractStep = 0;
 
   start(): void {
     if (this.touchInput) {
@@ -209,6 +220,7 @@ export class GameplayController extends Component {
   }
 
   onDestroy(): void {
+    this.stopTitleAttract();
     game.off(Game.EVENT_HIDE, this.handleGameHide, this);
     input.off(Input.EventType.KEY_DOWN, this.handleKeyDown, this);
   }
@@ -437,7 +449,7 @@ export class GameplayController extends Component {
     actions: readonly PuzzleAction[],
     elapsedSeconds: number,
   ): void {
-    this.block?.stopAttract();
+    this.stopTitleAttract();
     this.bufferedMove = null;
     this.levelIndex = index;
     this.engine = engine;
@@ -461,6 +473,7 @@ export class GameplayController extends Component {
   }
 
   private showTitleMenu(): void {
+    this.stopTitleAttract();
     this.mode = 'title';
     this.bufferedMove = null;
     this.engine = null;
@@ -470,14 +483,48 @@ export class GameplayController extends Component {
     if (this.passcodeInput) this.passcodeInput.string = '';
     if (this.passcodeFeedback) this.passcodeFeedback.string = '';
 
-    const attractIndex = Math.min(4, chapterOneLevels.length - 1);
+    const attractIndex = Math.min(2, chapterOneLevels.length - 1);
     const level = chapterOneLevels[attractIndex];
     const attractEngine = new PuzzleEngine(level);
+    const forwardRoute = (level.solution ?? [])
+      .filter((action): action is Direction => action !== 'switch-cube')
+      .slice(0, -1);
+    this.titleAttractEngine = attractEngine;
+    this.titleAttractRoute = [
+      ...forwardRoute,
+      ...[...forwardRoute].reverse().map((direction) => oppositeDirection[direction]),
+    ];
+    this.titleAttractStep = 0;
     this.board?.render(level);
     this.board?.applyState(attractEngine.getState());
     this.block?.startAttract(attractEngine.getState());
-    this.cameraController?.frameLevel(level);
+    const titleScreenOffset = Math.min(0.45, 390 / Math.max(1, view.getVisibleSize().width));
+    this.cameraController?.frameLevel(level, titleScreenOffset);
+    this.scheduleOnce(this.advanceTitleAttract, 0.55);
     this.updateTitleMenu();
+  }
+
+  private advanceTitleAttract(): void {
+    const engine = this.titleAttractEngine;
+    const block = this.block;
+    const direction = this.titleAttractRoute[this.titleAttractStep];
+    if (this.mode !== 'title' || !engine || !block || !direction) return;
+
+    const result = engine.move(direction);
+    block.playMove(result, () => {
+      if (this.mode !== 'title' || this.titleAttractEngine !== engine) return;
+      this.board?.applyState(result.current);
+      this.titleAttractStep = (this.titleAttractStep + 1) % this.titleAttractRoute.length;
+      this.scheduleOnce(this.advanceTitleAttract, 0.24);
+    }, 2);
+  }
+
+  private stopTitleAttract(): void {
+    this.unschedule(this.advanceTitleAttract);
+    this.titleAttractEngine = null;
+    this.titleAttractRoute = [];
+    this.titleAttractStep = 0;
+    this.block?.stopAttract();
   }
 
   private presentMove(result: MoveResult): void {

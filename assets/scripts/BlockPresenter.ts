@@ -20,6 +20,7 @@ export class BlockPresenter extends Component {
   private wholeNode: Node | null = null;
   private cubeNodes: [Node | null, Node | null] = [null, null];
   private activeCubeIndex: 0 | 1 = 0;
+  private motionTweenTarget: object | null = null;
 
   start(): void {
     this.resolveNodes();
@@ -32,27 +33,13 @@ export class BlockPresenter extends Component {
   startAttract(state: PuzzleState): void {
     this.stopAttract();
     this.snapTo(state);
-    const node = this.wholeNode;
-    if (!node) return;
-    const restingPosition = node.position.clone();
-    const liftedPosition = restingPosition.clone().add(new Vec3(0, 0.12, 0));
-    const restingRotation = node.rotation.clone();
-    const turn = new Quat();
-    const liftedRotation = new Quat();
-    Quat.fromEuler(turn, 0, 8, 0);
-    Quat.multiply(liftedRotation, turn, restingRotation);
-    tween(node)
-      .repeatForever(
-        tween<Node>()
-          .to(1.15, { position: liftedPosition, rotation: liftedRotation }, { easing: 'sineInOut' })
-          .to(1.15, { position: restingPosition, rotation: restingRotation }, { easing: 'sineInOut' }),
-      )
-      .start();
   }
 
   stopAttract(): void {
     this.resolveNodes();
     if (this.wholeNode) Tween.stopAllByTarget(this.wholeNode);
+    if (this.motionTweenTarget) Tween.stopAllByTarget(this.motionTweenTarget);
+    this.motionTweenTarget = null;
     this.busy = false;
   }
 
@@ -85,13 +72,13 @@ export class BlockPresenter extends Component {
     this.wholeNode.setRotation(this.rotationFor(state.block));
   }
 
-  playMove(result: MoveResult, onComplete: () => void): void {
+  playMove(result: MoveResult, onComplete: () => void, durationScale = 1): void {
     this.resolveNodes();
     if (result.previous.split) {
-      this.playSplitMove(result, onComplete);
+      this.playSplitMove(result, onComplete, durationScale);
       return;
     }
-    this.playWholeMove(result, onComplete);
+    this.playWholeMove(result, onComplete, durationScale);
   }
 
   playFall(result: MoveResult, onComplete: () => void): void {
@@ -223,7 +210,7 @@ export class BlockPresenter extends Component {
       .start();
   }
 
-  private playWholeMove(result: MoveResult, onComplete: () => void): void {
+  private playWholeMove(result: MoveResult, onComplete: () => void, durationScale: number): void {
     const node = this.wholeNode;
     if (!node) {
       this.snapTo(result.current);
@@ -250,9 +237,10 @@ export class BlockPresenter extends Component {
     const fullyUnsupported = result.status === 'fallen'
       && (result.supportedCells?.length ?? 0) === 0;
     const progress = { value: 0 };
+    this.motionTweenTarget = progress;
 
     tween(progress)
-      .to(this.rollDuration, { value: 1 }, {
+      .to(this.rollDuration * durationScale, { value: 1 }, {
         easing: 'quadInOut',
         onUpdate: () => {
           const rotationDelta = new Quat();
@@ -266,6 +254,7 @@ export class BlockPresenter extends Component {
         },
       })
       .call(() => {
+        this.motionTweenTarget = null;
         if (fullyUnsupported) {
           node.setPosition(targetPosition);
           node.setRotation(targetRotation);
@@ -282,7 +271,7 @@ export class BlockPresenter extends Component {
       .start();
   }
 
-  private playSplitMove(result: MoveResult, onComplete: () => void): void {
+  private playSplitMove(result: MoveResult, onComplete: () => void, durationScale: number): void {
     const active = result.previous.split?.activeCube ?? 0;
     const node = this.cubeNodes[active];
     if (!node) {
@@ -298,7 +287,7 @@ export class BlockPresenter extends Component {
           || cell.z !== result.previous.split?.cubes[1 - active].z)
         ?? result.occupiedCells[0];
     tween(node)
-      .to(0.16, { position: this.cubePosition(destination) }, { easing: 'quadInOut' })
+      .to(0.16 * durationScale, { position: this.cubePosition(destination) }, { easing: 'quadInOut' })
       .call(() => {
         this.snapTo(result.current);
         this.busy = false;

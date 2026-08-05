@@ -120,7 +120,7 @@ System.register("chunks:///_virtual/AudioController.ts", ['cc'], function (expor
 });
 
 System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBabelHelpers.js', 'cc'], function (exports) {
-  var _applyDecoratedDescriptor, _initializerDefineProperty, cclegacy, _decorator, Component, Vec3, Quat, tween, Tween;
+  var _applyDecoratedDescriptor, _initializerDefineProperty, cclegacy, _decorator, Component, Tween, Vec3, Quat, tween;
   return {
     setters: [function (module) {
       _applyDecoratedDescriptor = module.applyDecoratedDescriptor;
@@ -129,10 +129,10 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
       cclegacy = module.cclegacy;
       _decorator = module._decorator;
       Component = module.Component;
+      Tween = module.Tween;
       Vec3 = module.Vec3;
       Quat = module.Quat;
       tween = module.tween;
-      Tween = module.Tween;
     }],
     execute: function () {
       var _dec, _class, _class2, _descriptor, _descriptor2;
@@ -150,6 +150,7 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
           this.wholeNode = null;
           this.cubeNodes = [null, null];
           this.activeCubeIndex = 0;
+          this.motionTweenTarget = null;
         }
         start() {
           this.resolveNodes();
@@ -160,30 +161,12 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
         startAttract(state) {
           this.stopAttract();
           this.snapTo(state);
-          const node = this.wholeNode;
-          if (!node) return;
-          const restingPosition = node.position.clone();
-          const liftedPosition = restingPosition.clone().add(new Vec3(0, 0.12, 0));
-          const restingRotation = node.rotation.clone();
-          const turn = new Quat();
-          const liftedRotation = new Quat();
-          Quat.fromEuler(turn, 0, 8, 0);
-          Quat.multiply(liftedRotation, turn, restingRotation);
-          tween(node).repeatForever(tween().to(1.15, {
-            position: liftedPosition,
-            rotation: liftedRotation
-          }, {
-            easing: 'sineInOut'
-          }).to(1.15, {
-            position: restingPosition,
-            rotation: restingRotation
-          }, {
-            easing: 'sineInOut'
-          })).start();
         }
         stopAttract() {
           this.resolveNodes();
           if (this.wholeNode) Tween.stopAllByTarget(this.wholeNode);
+          if (this.motionTweenTarget) Tween.stopAllByTarget(this.motionTweenTarget);
+          this.motionTweenTarget = null;
           this.busy = false;
         }
         snapTo(state) {
@@ -213,13 +196,13 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
           this.wholeNode.setPosition(this.positionFor(state.block));
           this.wholeNode.setRotation(this.rotationFor(state.block));
         }
-        playMove(result, onComplete) {
+        playMove(result, onComplete, durationScale = 1) {
           this.resolveNodes();
           if (result.previous.split) {
-            this.playSplitMove(result, onComplete);
+            this.playSplitMove(result, onComplete, durationScale);
             return;
           }
-          this.playWholeMove(result, onComplete);
+          this.playWholeMove(result, onComplete, durationScale);
         }
         playFall(result, onComplete) {
           this.busy = true;
@@ -330,7 +313,7 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
             onComplete();
           }).start();
         }
-        playWholeMove(result, onComplete) {
+        playWholeMove(result, onComplete, durationScale) {
           var _result$supportedCell;
           const node = this.wholeNode;
           if (!node) {
@@ -355,7 +338,8 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
           const progress = {
             value: 0
           };
-          tween(progress).to(this.rollDuration, {
+          this.motionTweenTarget = progress;
+          tween(progress).to(this.rollDuration * durationScale, {
             value: 1
           }, {
             easing: 'quadInOut',
@@ -370,6 +354,7 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
               node.setRotation(rotation);
             }
           }).call(() => {
+            this.motionTweenTarget = null;
             if (fullyUnsupported) {
               node.setPosition(targetPosition);
               node.setRotation(targetRotation);
@@ -384,7 +369,7 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
             onComplete();
           }).start();
         }
-        playSplitMove(result, onComplete) {
+        playSplitMove(result, onComplete, durationScale) {
           var _result$previous$spli;
           const active = ((_result$previous$spli = result.previous.split) == null ? void 0 : _result$previous$spli.activeCube) ?? 0;
           const node = this.cubeNodes[active];
@@ -398,7 +383,7 @@ System.register("chunks:///_virtual/BlockPresenter.ts", ['./rollupPluginModLoBab
             var _result$previous$spli2, _result$previous$spli3;
             return cell.x !== ((_result$previous$spli2 = result.previous.split) == null ? void 0 : _result$previous$spli2.cubes[1 - active].x) || cell.z !== ((_result$previous$spli3 = result.previous.split) == null ? void 0 : _result$previous$spli3.cubes[1 - active].z);
           }) ?? result.occupiedCells[0];
-          tween(node).to(0.16, {
+          tween(node).to(0.16 * durationScale, {
             position: this.cubePosition(destination)
           }, {
             easing: 'quadInOut'
@@ -716,7 +701,7 @@ System.register("chunks:///_virtual/CameraController.ts", ['./rollupPluginModLoB
           super(...args);
           _initializerDefineProperty(this, "camera", _descriptor, this);
         }
-        frameLevel(level) {
+        frameLevel(level, horizontalScreenOffset = 0) {
           const cells = [...level.tiles, ...(level.bridges ?? []).reduce((result, bridge) => result.concat(bridge.cells), []), ...(level.splits ?? []).reduce((result, split) => result.concat(split.destinations), []), level.goal];
           const bounds = boundsForCells(cells);
           const centerX = (bounds.minX + bounds.maxX) * 0.5;
@@ -724,16 +709,26 @@ System.register("chunks:///_virtual/CameraController.ts", ['./rollupPluginModLoB
           const target = new Vec3(centerX, 0, centerZ);
 
           // This fixed offset gives approximately 34 degrees pitch and 18 degrees yaw.
-          const position = target.clone().add(new Vec3(-6, 13, -18));
+          const cameraOffset = new Vec3(-6, 13, -18);
+          const basePosition = target.clone().add(cameraOffset);
+          const orthoHeight = this.orthoHeightForBounds(bounds, target, basePosition, horizontalScreenOffset);
+          const visible = view.getVisibleSize();
+          const aspect = Math.max(1, visible.width / visible.height);
+          const forward = target.clone().subtract(basePosition).normalize();
+          const right = new Vec3();
+          Vec3.cross(right, forward, Vec3.UP).normalize();
+          const framedTarget = new Vec3();
+          Vec3.scaleAndAdd(framedTarget, target, right, -orthoHeight * aspect * horizontalScreenOffset);
+          const position = framedTarget.clone().add(cameraOffset);
           this.node.setPosition(position);
-          this.node.lookAt(target, Vec3.UP);
+          this.node.lookAt(framedTarget, Vec3.UP);
           if (!this.camera) {
             return;
           }
           this.camera.projection = Camera.ProjectionType.ORTHO;
-          this.camera.orthoHeight = this.orthoHeightForBounds(bounds, target, position);
+          this.camera.orthoHeight = orthoHeight;
         }
-        orthoHeightForBounds(bounds, target, cameraPosition) {
+        orthoHeightForBounds(bounds, target, cameraPosition, horizontalScreenOffset) {
           const forward = target.clone().subtract(cameraPosition).normalize();
           const right = new Vec3();
           Vec3.cross(right, forward, Vec3.UP);
@@ -758,7 +753,8 @@ System.register("chunks:///_virtual/CameraController.ts", ['./rollupPluginModLoB
           const visible = view.getVisibleSize();
           const aspect = Math.max(1, visible.width / visible.height);
           const verticalWithMargin = verticalExtent + 0.9;
-          const horizontalWithMargin = horizontalExtent / aspect + 0.9;
+          const visibleHorizontalRatio = Math.max(0.35, 1 - Math.abs(horizontalScreenOffset));
+          const horizontalWithMargin = horizontalExtent / (aspect * visibleHorizontalRatio) + 0.9;
           return Math.max(3.4, verticalWithMargin, horizontalWithMargin);
         }
       }, _descriptor = _applyDecoratedDescriptor(_class2.prototype, "camera", [_dec2], {
@@ -1500,7 +1496,7 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
 });
 
 System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModLoBabelHelpers.js', 'cc', './index.ts', './index2.ts', './index3.ts', './AudioController.ts', './BlockPresenter.ts', './BoardRenderer.ts', './CameraController.ts', './ReleaseSaveRepository.ts', './TouchInputController.ts', './PlatformAdapter.ts', './tutorialLevels.ts', './releaseSave.ts', './localization.ts', './onboarding.ts', './PuzzleEngine.ts'], function (exports) {
-  var _applyDecoratedDescriptor, _initializerDefineProperty, cclegacy, Label, Node, EditBox, Button, _decorator, Component, game, Game, input, Input, KeyCode, getLevelIndexByPasscode, AudioController, BlockPresenter, BoardRenderer, CameraController, ReleaseSaveRepository, TouchInputController, createPlatformAdapter, chapterOneLevels, createDefaultReleaseSave, resetCampaignProgress, resumeSavedRun, getHighestUnlockedIndex, withUnlockedLevel, translate, nextGameLanguage, getLocalizedOnboardingCopy, languageDisplayName, onboardingTopics, pendingOnboardingTopics, PuzzleEngine;
+  var _applyDecoratedDescriptor, _initializerDefineProperty, cclegacy, Label, Node, EditBox, Button, _decorator, Component, game, Game, input, Input, view, KeyCode, getLevelIndexByPasscode, AudioController, BlockPresenter, BoardRenderer, CameraController, ReleaseSaveRepository, TouchInputController, createPlatformAdapter, chapterOneLevels, createDefaultReleaseSave, resetCampaignProgress, resumeSavedRun, getHighestUnlockedIndex, withUnlockedLevel, translate, nextGameLanguage, getLocalizedOnboardingCopy, languageDisplayName, onboardingTopics, pendingOnboardingTopics, PuzzleEngine;
   return {
     setters: [function (module) {
       _applyDecoratedDescriptor = module.applyDecoratedDescriptor;
@@ -1517,6 +1513,7 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
       Game = module.Game;
       input = module.input;
       Input = module.Input;
+      view = module.view;
       KeyCode = module.KeyCode;
     }, null, function (module) {
       getLevelIndexByPasscode = module.getLevelIndexByPasscode;
@@ -1560,6 +1557,12 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
         ccclass,
         property
       } = _decorator;
+      const oppositeDirection = {
+        up: 'down',
+        down: 'up',
+        left: 'right',
+        right: 'left'
+      };
       let GameplayController = exports('GameplayController', (_dec = ccclass('GameplayController'), _dec2 = property(BoardRenderer), _dec3 = property(BlockPresenter), _dec4 = property(CameraController), _dec5 = property(TouchInputController), _dec6 = property(AudioController), _dec7 = property(Label), _dec8 = property(Label), _dec9 = property(Label), _dec10 = property(Label), _dec11 = property(Node), _dec12 = property(Node), _dec13 = property(Node), _dec14 = property(Node), _dec15 = property(Node), _dec16 = property(Node), _dec17 = property(Node), _dec18 = property(Node), _dec19 = property(Node), _dec20 = property(Node), _dec21 = property(EditBox), _dec22 = property(Label), _dec23 = property(Label), _dec24 = property(Label), _dec25 = property(Label), _dec26 = property(Label), _dec27 = property(Button), _dec28 = property(Label), _dec29 = property(Label), _dec30 = property(Label), _dec31 = property(Label), _dec32 = property(Label), _dec33 = property(Label), _dec34 = property(Label), _dec35 = property(Label), _dec36 = property(Label), _dec37 = property(Label), _dec38 = property(Label), _dec39 = property(Label), _dec40 = property(Label), _dec41 = property(Node), _dec(_class = (_class2 = class GameplayController extends Component {
         constructor(...args) {
           super(...args);
@@ -1619,6 +1622,9 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
           this.tutorialQueue = [];
           this.tutorialTotal = 0;
           this.howTopicIndex = 0;
+          this.titleAttractEngine = null;
+          this.titleAttractRoute = [];
+          this.titleAttractStep = 0;
         }
         start() {
           var _this$audioController;
@@ -1633,6 +1639,7 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
           this.showTitleMenu();
         }
         onDestroy() {
+          this.stopTitleAttract();
           game.off(Game.EVENT_HIDE, this.handleGameHide, this);
           input.off(Input.EventType.KEY_DOWN, this.handleKeyDown, this);
         }
@@ -1853,8 +1860,8 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
           this.presentRun(index, new PuzzleEngine(chapterOneLevels[index]), [], 0);
         }
         presentRun(index, engine, actions, elapsedSeconds) {
-          var _this$block4, _this$board, _this$board2, _this$block5, _this$cameraControlle;
-          (_this$block4 = this.block) == null || _this$block4.stopAttract();
+          var _this$board, _this$board2, _this$block4, _this$cameraControlle;
+          this.stopTitleAttract();
           this.bufferedMove = null;
           this.levelIndex = index;
           this.engine = engine;
@@ -1868,7 +1875,7 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
           (_this$board = this.board) == null || _this$board.render(level);
           const state = engine.getState();
           (_this$board2 = this.board) == null || _this$board2.applyState(state);
-          (_this$block5 = this.block) == null || _this$block5.snapTo(state);
+          (_this$block4 = this.block) == null || _this$block4.snapTo(state);
           (_this$cameraControlle = this.cameraController) == null || _this$cameraControlle.frameLevel(level);
           this.platform.onLevelStarted(level.id);
           this.persistCurrentRun();
@@ -1876,7 +1883,8 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
           this.startAutomaticTutorial(level);
         }
         showTitleMenu() {
-          var _this$board3, _this$board4, _this$block6, _this$cameraControlle2;
+          var _this$board3, _this$board4, _this$block5, _this$cameraControlle2;
+          this.stopTitleAttract();
           this.mode = 'title';
           this.bufferedMove = null;
           this.engine = null;
@@ -1885,20 +1893,48 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
           this.showOnly(this.titleMenuRoot);
           if (this.passcodeInput) this.passcodeInput.string = '';
           if (this.passcodeFeedback) this.passcodeFeedback.string = '';
-          const attractIndex = Math.min(4, chapterOneLevels.length - 1);
+          const attractIndex = Math.min(2, chapterOneLevels.length - 1);
           const level = chapterOneLevels[attractIndex];
           const attractEngine = new PuzzleEngine(level);
+          const forwardRoute = (level.solution ?? []).filter(action => action !== 'switch-cube').slice(0, -1);
+          this.titleAttractEngine = attractEngine;
+          this.titleAttractRoute = [...forwardRoute, ...[...forwardRoute].reverse().map(direction => oppositeDirection[direction])];
+          this.titleAttractStep = 0;
           (_this$board3 = this.board) == null || _this$board3.render(level);
           (_this$board4 = this.board) == null || _this$board4.applyState(attractEngine.getState());
-          (_this$block6 = this.block) == null || _this$block6.startAttract(attractEngine.getState());
-          (_this$cameraControlle2 = this.cameraController) == null || _this$cameraControlle2.frameLevel(level);
+          (_this$block5 = this.block) == null || _this$block5.startAttract(attractEngine.getState());
+          const titleScreenOffset = Math.min(0.45, 390 / Math.max(1, view.getVisibleSize().width));
+          (_this$cameraControlle2 = this.cameraController) == null || _this$cameraControlle2.frameLevel(level, titleScreenOffset);
+          this.scheduleOnce(this.advanceTitleAttract, 0.55);
           this.updateTitleMenu();
+        }
+        advanceTitleAttract() {
+          const engine = this.titleAttractEngine;
+          const block = this.block;
+          const direction = this.titleAttractRoute[this.titleAttractStep];
+          if (this.mode !== 'title' || !engine || !block || !direction) return;
+          const result = engine.move(direction);
+          block.playMove(result, () => {
+            var _this$board5;
+            if (this.mode !== 'title' || this.titleAttractEngine !== engine) return;
+            (_this$board5 = this.board) == null || _this$board5.applyState(result.current);
+            this.titleAttractStep = (this.titleAttractStep + 1) % this.titleAttractRoute.length;
+            this.scheduleOnce(this.advanceTitleAttract, 0.24);
+          }, 2);
+        }
+        stopTitleAttract() {
+          var _this$block6;
+          this.unschedule(this.advanceTitleAttract);
+          this.titleAttractEngine = null;
+          this.titleAttractRoute = [];
+          this.titleAttractStep = 0;
+          (_this$block6 = this.block) == null || _this$block6.stopAttract();
         }
         presentMove(result) {
           if (!this.block || !this.engine) return;
           this.block.playMove(result, () => {
-            var _this$board5, _this$audioController29;
-            (_this$board5 = this.board) == null || _this$board5.applyState(result.current);
+            var _this$board6, _this$audioController29;
+            (_this$board6 = this.board) == null || _this$board6.applyState(result.current);
             if (result.status === 'fallen') {
               var _this$audioController28, _this$block7;
               (_this$audioController28 = this.audioController) == null || _this$audioController28.playFall();
