@@ -4,8 +4,16 @@ temp/
 build/
 dist-tests/
 node_modules/
-native/
 profiles/
 .creator/
+
+# Native platform build and machine-local files
+native/**/.cxx/
+native/**/.hvigor/
+native/**/.idea/
+native/**/oh_modules/
+native/engine/common/localCfg.cmake
+native/engine/harmonyos-next/build-profile.json5
+
 *.log
 .DS_Store

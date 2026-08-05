@@ -1,0 +1,132 @@
+{
+    "importBase": "import",
+    "nativeBase": "native",
+    "name": "resources",
+    "deps": [],
+    "uuids": [
+        "0bd0865ac",
+        "1acbd273-d986-42f5-8bd6-fef5ff1fda8e",
+        "1acbd273-d986-42f5-8bd6-fef5ff1fda8e@6c48a",
+        "21155288-2f59-4060-905c-5cfb532a8c34",
+        "21155288-2f59-4060-905c-5cfb532a8c34@6c48a",
+        "2e4494ef-3a43-4b9b-91a7-7bc0433abc21",
+        "5c1d327d-5ab6-4ff7-8e1d-88f8f2914f91",
+        "9b6cc058-0154-4621-a1d6-81b554dac432",
+        "9b6cc058-0154-4621-a1d6-81b554dac432@6c48a",
+        "ab44136d-e88f-464f-9a2f-b41118e4fdff",
+        "ae7f82b9-e14f-474e-8b52-28a2fc323b87",
+        "b3ca1efb-9d98-4eea-902f-0d1a1b8d76d7",
+        "c9e84664-b895-4284-934f-ce700051bfa5",
+        "c9e84664-b895-4284-934f-ce700051bfa5@6c48a",
+        "cc77de19-f719-48bc-978f-1cfcf5d1d76c",
+        "ce03fee6-62d7-4712-b9dd-da6f9517443c",
+        "ce11c111-084b-4b0c-b9aa-2f7e198839be",
+        "ce11c111-084b-4b0c-b9aa-2f7e198839be@6c48a"
+    ],
+    "paths": {
+        "cc77de19-f719-48bc-978f-1cfcf5d1d76c": [
+            "audio/ambient-loop",
+            "cc.AudioClip",
+            1
+        ],
+        "ab44136d-e88f-464f-9a2f-b41118e4fdff": [
+            "audio/complete",
+            "cc.AudioClip",
+            1
+        ],
+        "5c1d327d-5ab6-4ff7-8e1d-88f8f2914f91": [
+            "audio/fall",
+            "cc.AudioClip",
+            1
+        ],
+        "b3ca1efb-9d98-4eea-902f-0d1a1b8d76d7": [
+            "audio/move-stone-1",
+            "cc.AudioClip",
+            1
+        ],
+        "2e4494ef-3a43-4b9b-91a7-7bc0433abc21": [
+            "audio/move-stone-2",
+            "cc.AudioClip",
+            1
+        ],
+        "ce03fee6-62d7-4712-b9dd-da6f9517443c": [
+            "audio/move-stone-3",
+            "cc.AudioClip",
+            1
+        ],
+        "ae7f82b9-e14f-474e-8b52-28a2fc323b87": [
+            "audio/ui-click",
+            "cc.AudioClip",
+            1
+        ],
+        "c9e84664-b895-4284-934f-ce700051bfa5": [
+            "textures/aged-brass",
+            "cc.ImageAsset",
+            1
+        ],
+        "c9e84664-b895-4284-934f-ce700051bfa5@6c48a": [
+            "textures/aged-brass/texture",
+            "cc.Texture2D",
+            1
+        ],
+        "1acbd273-d986-42f5-8bd6-fef5ff1fda8e": [
+            "textures/classic-stone-v1",
+            "cc.ImageAsset",
+            1
+        ],
+        "1acbd273-d986-42f5-8bd6-fef5ff1fda8e@6c48a": [
+            "textures/classic-stone-v1/texture",
+            "cc.Texture2D",
+            1
+        ],
+        "21155288-2f59-4060-905c-5cfb532a8c34": [
+            "textures/ember-void-v1",
+            "cc.ImageAsset",
+            1
+        ],
+        "21155288-2f59-4060-905c-5cfb532a8c34@6c48a": [
+            "textures/ember-void-v1/texture",
+            "cc.Texture2D",
+            1
+        ],
+        "9b6cc058-0154-4621-a1d6-81b554dac432": [
+            "textures/rusted-iron-v1",
+            "cc.ImageAsset",
+            1
+        ],
+        "9b6cc058-0154-4621-a1d6-81b554dac432@6c48a": [
+            "textures/rusted-iron-v1/texture",
+            "cc.Texture2D",
+            1
+        ],
+        "ce11c111-084b-4b0c-b9aa-2f7e198839be": [
+            "textures/weathered-steel",
+            "cc.ImageAsset",
+            1
+        ],
+        "ce11c111-084b-4b0c-b9aa-2f7e198839be@6c48a": [
+            "textures/weathered-steel/texture",
+            "cc.Texture2D",
+            1
+        ]
+    },
+    "scenes": {},
+    "packs": {
+        "0bd0865ac": [
+            "1acbd273-d986-42f5-8bd6-fef5ff1fda8e@6c48a",
+            "9b6cc058-0154-4621-a1d6-81b554dac432@6c48a",
+            "21155288-2f59-4060-905c-5cfb532a8c34@6c48a",
+            "c9e84664-b895-4284-934f-ce700051bfa5@6c48a",
+            "ce11c111-084b-4b0c-b9aa-2f7e198839be@6c48a"
+        ]
+    },
+    "versions": {
+        "import": [],
+        "native": []
+    },
+    "redirect": [],
+    "debug": true,
+    "extensionMap": {},
+    "hasPreloadScript": true,
+    "dependencyRelationships": {}
+}

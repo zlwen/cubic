@@ -1,0 +1,18 @@
+{
+  apiType: 'stageMode',
+  buildOption: {
+    externalNativeOptions: {
+      path: '../CMakeLists.txt',
+      arguments: 'arm-linux-ohos -DOHOS_STL=c++_shared -DRES_DIR=/Users/kk/workspace/own_proj/cubic/build/harmonyos-next -DCOMMON_DIR=/Users/kk/workspace/own_proj/cubic/native/engine/common -DOPENHARMONY=1',
+      abiFilters: [
+        'arm64-v8a',
+      ],
+      cppFlags: '',
+    },
+  },
+  targets: [
+    {
+      name: 'default',
+    },
+  ],
+}
