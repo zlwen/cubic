@@ -149,6 +149,8 @@ function testTutorialLevels() {
   assert.deepEqual(errors, []);
   assert.equal(chapterOneLevels.length, 33);
   assert.equal(tutorialLevels, chapterOneLevels);
+  assert.equal(chapterOneLevels[0].id, 'south-step');
+  assert.equal(chapterOneLevels[1].id, 'first-roll');
 
   const ids = new Set(chapterOneLevels.map((level) => level.id));
   const titles = new Set(chapterOneLevels.map((level) => level.title));
@@ -187,8 +189,9 @@ function testTutorialLevels() {
 }
 
 function testPasscodeLookup() {
-  assert.equal(getLevelIndexByPasscode('CUBE'), 0);
-  assert.equal(getLevelIndexByPasscode(' cube '), 0);
+  assert.equal(getLevelIndexByPasscode('RIFT'), 0);
+  assert.equal(getLevelIndexByPasscode('CUBE'), 1);
+  assert.equal(getLevelIndexByPasscode(' cube '), 1);
   assert.equal(getLevelIndexByPasscode('last'), 32);
   assert.equal(getLevelIndexByPasscode('ABC'), -1);
   assert.equal(getLevelIndexByPasscode('1234'), -1);

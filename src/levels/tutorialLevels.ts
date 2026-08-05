@@ -315,8 +315,8 @@ const wholeBlueprints: ReadonlyArray<{
   route: readonly Direction[];
   mechanics?: MechanicPlan;
 }> = [
-  { meta: { id: 'first-roll', title: 'First Roll', passcode: 'CUBE' }, route: ['up', 'right', 'right', 'up'] },
   { meta: { id: 'south-step', title: 'South Step', passcode: 'RIFT' }, route: ['left', 'left'] },
+  { meta: { id: 'first-roll', title: 'First Roll', passcode: 'CUBE' }, route: ['up', 'right', 'right', 'up'] },
   { meta: { id: 'quiet-corner', title: 'Quiet Corner', passcode: 'VEIL' }, route: ['left', 'up', 'left', 'up', 'left', 'down'] },
   { meta: { id: 'narrow-return', title: 'Narrow Return', passcode: 'TILT' }, route: ['up', 'left', 'down', 'down', 'left', 'up'] },
   { meta: { id: 'gate-primer', title: 'Gate Primer', passcode: 'GATE' }, route: ['left', 'down', 'down', 'left', 'left', 'up', 'up', 'left'], mechanics: { gates: [{ type: 'soft-switch' }] } },

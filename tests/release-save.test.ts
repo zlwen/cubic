@@ -57,14 +57,14 @@ function savedRun(level: LevelDefinition, actions: readonly PuzzleAction[]): Rel
 
 function testBasicResumeRoundTrip() {
   const level = chapterOneLevels[0];
-  const actions = (level.solution ?? []).slice(0, 2);
+  const actions = (level.solution ?? []).slice(0, 1);
   const original = savedRun(level, actions);
   const decoded = decodeReleaseSave(serializeReleaseSave(original), chapterOneLevels);
   const resumed = resumeSavedRun(decoded, chapterOneLevels);
   check.equal(resumed?.levelIndex, 0);
   check.deepEqual(resumed?.actions, actions);
   check.equal(resumed?.elapsedSeconds, 17.5);
-  check.equal(resumed?.engine.getState().steps, 2);
+  check.equal(resumed?.engine.getState().steps, actions.length);
 }
 
 function testBridgeAndSplitResume() {
@@ -180,7 +180,7 @@ function testLanguageSelectionAndCatalogs() {
 
 function testLanguageSaveCompatibility() {
   const level = chapterOneLevels[0];
-  const actions = (level.solution ?? []).slice(0, 2);
+  const actions = (level.solution ?? []).slice(0, 1);
   const legacySave = normalizeReleaseSave({
     version: 1,
     currentRun: { levelId: level.id, actions, elapsedSeconds: 9 },

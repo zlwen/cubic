@@ -1113,7 +1113,7 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           const levelStatLabel = this.createStatLabel(statsCluster, 'LevelStat', 'LEVEL\n01 / 33', -195);
           const movesStatLabel = this.createStatLabel(statsCluster, 'MovesStat', 'MOVES\n0', -65);
           const timeStatLabel = this.createStatLabel(statsCluster, 'TimeStat', 'TIME\n00:00', 65);
-          const passcodeStatLabel = this.createStatLabel(statsCluster, 'PasscodeStat', 'PASSCODE\nCUBE', 195);
+          const passcodeStatLabel = this.createStatLabel(statsCluster, 'PasscodeStat', 'PASSCODE\nRIFT', 195);
           const titleMenuRoot = this.createOverlay('TitleMenu', safeArea, visibleSize.width, visibleSize.height, new Color(6, 7, 9, 148));
           const titleBand = this.createUiRoot('TitleBand', titleMenuRoot, 390, visibleSize.height);
           titleBand.setPosition(-visibleSize.width * 0.5 + 195, 0);
@@ -4450,18 +4450,18 @@ System.register("chunks:///_virtual/tutorialLevels.ts", ['cc', './index.ts', './
       }
       const wholeBlueprints = [{
         meta: {
-          id: 'first-roll',
-          title: 'First Roll',
-          passcode: 'CUBE'
-        },
-        route: ['up', 'right', 'right', 'up']
-      }, {
-        meta: {
           id: 'south-step',
           title: 'South Step',
           passcode: 'RIFT'
         },
         route: ['left', 'left']
+      }, {
+        meta: {
+          id: 'first-roll',
+          title: 'First Roll',
+          passcode: 'CUBE'
+        },
+        route: ['up', 'right', 'right', 'up']
       }, {
         meta: {
           id: 'quiet-corner',
