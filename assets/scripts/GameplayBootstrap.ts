@@ -5,10 +5,10 @@ import {
   Canvas,
   Color,
   Component,
+  builtinResMgr,
   DirectionalLight,
   EditBox,
   EventHandler,
-  Graphics,
   HorizontalTextAlignment,
   Label,
   Layers,
@@ -16,6 +16,9 @@ import {
   MeshRenderer,
   Node,
   primitives,
+  Sprite,
+  SpriteFrame,
+  Texture2D,
   UITransform,
   utils,
   Vec3,
@@ -79,6 +82,8 @@ interface GameplayUi {
 export class GameplayBootstrap extends Component {
   @property(Material)
   litBaseMaterial: Material | null = null;
+
+  private solidSpriteFrame: SpriteFrame | null = null;
 
   start(): void {
     const boardRoot = this.createChild('BoardRoot');
@@ -704,10 +709,7 @@ export class GameplayBootstrap extends Component {
   ): Node {
     const node = this.createUiRoot(name, parent, width, height);
     this.stretchToParent(node);
-    const graphics = node.addComponent(Graphics);
-    graphics.fillColor = color;
-    graphics.rect(-width * 0.5, -height * 0.5, width, height);
-    graphics.fill();
+    this.createSolidRect(node, 'Background', width, height, color);
     return node;
   }
 
@@ -761,17 +763,16 @@ export class GameplayBootstrap extends Component {
   ): { button: Button; label: Label } {
     const buttonNode = this.createUiRoot(name, parent, width, height);
     buttonNode.setPosition(position);
-    const graphics = buttonNode.addComponent(Graphics);
-    graphics.fillColor = new Color(43, 45, 50, 246);
-    graphics.rect(-width * 0.5, -height * 0.5, width, height);
-    graphics.fill();
-    graphics.strokeColor = new Color(105, 108, 116, 255);
-    graphics.lineWidth = 1;
-    graphics.rect(-width * 0.5, -height * 0.5, width, height);
-    graphics.stroke();
-    graphics.fillColor = new Color(174, 177, 184, 255);
-    graphics.rect(-width * 0.5 + 2, height * 0.5 - 3, width - 4, 2);
-    graphics.fill();
+    this.createSolidRect(buttonNode, 'Border', width, height, new Color(105, 108, 116, 255));
+    this.createSolidRect(buttonNode, 'Fill', width - 2, height - 2, new Color(43, 45, 50, 246));
+    this.createSolidRect(
+      buttonNode,
+      'Highlight',
+      width - 4,
+      2,
+      new Color(174, 177, 184, 255),
+      new Vec3(0, height * 0.5 - 3, 0),
+    );
 
     const button = buttonNode.addComponent(Button);
     button.target = buttonNode;
@@ -795,14 +796,34 @@ export class GameplayBootstrap extends Component {
   }
 
   private drawPanel(node: Node, width: number, height: number, color: Color): void {
-    const graphics = node.addComponent(Graphics);
-    graphics.fillColor = color;
-    graphics.rect(-width * 0.5, -height * 0.5, width, height);
-    graphics.fill();
-    graphics.strokeColor = new Color(92, 95, 102, 230);
-    graphics.lineWidth = 1;
-    graphics.rect(-width * 0.5, -height * 0.5, width, height);
-    graphics.stroke();
+    this.createSolidRect(node, 'Border', width, height, new Color(92, 95, 102, 230));
+    this.createSolidRect(node, 'Fill', width - 2, height - 2, color);
+  }
+
+  private createSolidRect(
+    parent: Node,
+    name: string,
+    width: number,
+    height: number,
+    color: Color,
+    position = Vec3.ZERO,
+  ): Sprite {
+    const node = this.createUiRoot(name, parent, width, height);
+    node.setPosition(position);
+    const sprite = node.addComponent(Sprite);
+    sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+    sprite.spriteFrame = this.getSolidSpriteFrame();
+    sprite.color = color;
+    return sprite;
+  }
+
+  private getSolidSpriteFrame(): SpriteFrame {
+    if (!this.solidSpriteFrame) {
+      const spriteFrame = new SpriteFrame();
+      spriteFrame.texture = builtinResMgr.get<Texture2D>('white-texture');
+      this.solidSpriteFrame = spriteFrame;
+    }
+    return this.solidSpriteFrame;
   }
 
   private stretchToParent(node: Node): void {
