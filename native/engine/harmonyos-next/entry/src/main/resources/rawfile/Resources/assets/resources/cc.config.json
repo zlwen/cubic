@@ -4,13 +4,16 @@
     "name": "resources",
     "deps": [],
     "uuids": [
+        "06f2e0a5-2299-4dca-9475-eabd3c0a3000",
         "0bd0865ac",
         "1acbd273-d986-42f5-8bd6-fef5ff1fda8e",
         "1acbd273-d986-42f5-8bd6-fef5ff1fda8e@6c48a",
         "21155288-2f59-4060-905c-5cfb532a8c34",
         "21155288-2f59-4060-905c-5cfb532a8c34@6c48a",
+        "25d67462-8002-4f5e-923e-7d6f33b2f892",
         "2e4494ef-3a43-4b9b-91a7-7bc0433abc21",
         "5c1d327d-5ab6-4ff7-8e1d-88f8f2914f91",
+        "817d2377-31d0-4ddc-a171-0d5f9a63ff9f",
         "9b6cc058-0154-4621-a1d6-81b554dac432",
         "9b6cc058-0154-4621-a1d6-81b554dac432@6c48a",
         "ab44136d-e88f-464f-9a2f-b41118e4fdff",
@@ -21,7 +24,8 @@
         "cc77de19-f719-48bc-978f-1cfcf5d1d76c",
         "ce03fee6-62d7-4712-b9dd-da6f9517443c",
         "ce11c111-084b-4b0c-b9aa-2f7e198839be",
-        "ce11c111-084b-4b0c-b9aa-2f7e198839be@6c48a"
+        "ce11c111-084b-4b0c-b9aa-2f7e198839be@6c48a",
+        "f190e7b8-c62c-4629-914e-45cbd2ed80b2"
     ],
     "paths": {
         "cc77de19-f719-48bc-978f-1cfcf5d1d76c": [
@@ -57,6 +61,26 @@
         "ae7f82b9-e14f-474e-8b52-28a2fc323b87": [
             "audio/ui-click",
             "cc.AudioClip",
+            1
+        ],
+        "817d2377-31d0-4ddc-a171-0d5f9a63ff9f": [
+            "fonts/NotoSansSC-Medium",
+            "cc.TTFFont",
+            1
+        ],
+        "25d67462-8002-4f5e-923e-7d6f33b2f892": [
+            "fonts/OFL-NotoSansSC",
+            "cc.TextAsset",
+            1
+        ],
+        "f190e7b8-c62c-4629-914e-45cbd2ed80b2": [
+            "fonts/OFL-Oxanium",
+            "cc.TextAsset",
+            1
+        ],
+        "06f2e0a5-2299-4dca-9475-eabd3c0a3000": [
+            "fonts/Oxanium-SemiBold",
+            "cc.TTFFont",
             1
         ],
         "c9e84664-b895-4284-934f-ce700051bfa5": [

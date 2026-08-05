@@ -836,8 +836,8 @@ System.register("chunks:///_virtual/coords.ts", ['cc'], function (exports) {
   };
 });
 
-System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLoBabelHelpers.js', 'cc', './AudioController.ts', './BlockPresenter.ts', './BoardRenderer.ts', './CameraController.ts', './GameplayController.ts', './MobileSafeArea.ts', './TouchInputController.ts'], function (exports) {
-  var _applyDecoratedDescriptor, _initializerDefineProperty, cclegacy, Material, _decorator, Component, Camera, Node, Color, MeshRenderer, utils, primitives, Vec3, DirectionalLight, Layers, view, UITransform, Canvas, Widget, HorizontalTextAlignment, EditBox, Label, VerticalTextAlignment, Button, EventHandler, Sprite, SpriteFrame, builtinResMgr, AudioController, BlockPresenter, BoardRenderer, CameraController, GameplayController, MobileSafeArea, TouchInputController;
+System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLoBabelHelpers.js', 'cc', './AudioController.ts', './BlockPresenter.ts', './BoardRenderer.ts', './CameraController.ts', './GameplayController.ts', './MobileSafeArea.ts', './TouchInputController.ts', './UiButtonVisual.ts'], function (exports) {
+  var _applyDecoratedDescriptor, _initializerDefineProperty, cclegacy, Material, _decorator, Component, resources, TTFFont, Camera, Node, Color, MeshRenderer, utils, primitives, Vec3, DirectionalLight, Layers, view, UITransform, Canvas, Widget, HorizontalTextAlignment, EditBox, Label, VerticalTextAlignment, Button, EventHandler, Sprite, SpriteFrame, builtinResMgr, AudioController, BlockPresenter, BoardRenderer, CameraController, GameplayController, MobileSafeArea, TouchInputController, UiButtonVisual;
   return {
     setters: [function (module) {
       _applyDecoratedDescriptor = module.applyDecoratedDescriptor;
@@ -847,6 +847,8 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
       Material = module.Material;
       _decorator = module._decorator;
       Component = module.Component;
+      resources = module.resources;
+      TTFFont = module.TTFFont;
       Camera = module.Camera;
       Node = module.Node;
       Color = module.Color;
@@ -883,6 +885,8 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
       MobileSafeArea = module.MobileSafeArea;
     }, function (module) {
       TouchInputController = module.TouchInputController;
+    }, function (module) {
+      UiButtonVisual = module.UiButtonVisual;
     }],
     execute: function () {
       var _dec, _dec2, _class, _class2, _descriptor;
@@ -896,8 +900,25 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           super(...args);
           _initializerDefineProperty(this, "litBaseMaterial", _descriptor, this);
           this.solidSpriteFrame = null;
+          this.uiFont = null;
+          this.displayFont = null;
         }
         start() {
+          let pending = 2;
+          const complete = () => {
+            pending -= 1;
+            if (pending === 0) this.initialize();
+          };
+          resources.load('fonts/NotoSansSC-Medium', TTFFont, (error, font) => {
+            if (error) console.warn('UI font failed to load.', error);else this.uiFont = font;
+            complete();
+          });
+          resources.load('fonts/Oxanium-SemiBold', TTFFont, (error, font) => {
+            if (error) console.warn('Display font failed to load.', error);else this.displayFont = font;
+            complete();
+          });
+        }
+        initialize() {
           const boardRoot = this.createChild('BoardRoot');
           const blockRoot = this.createBlock();
           this.createVoidBackdrop();
@@ -1093,7 +1114,7 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           };
           const gameplayHudRoot = this.createUiRoot('GameplayHud', safeArea, visibleSize.width, visibleSize.height);
           this.stretchToParent(gameplayHudRoot);
-          const menuButton = this.createButton(gameplayHudRoot, 'MenuButton', 'MENU', Vec3.ZERO, 'openMenu', 126, 48);
+          const menuButton = this.createButton(gameplayHudRoot, 'MenuButton', 'MENU', Vec3.ZERO, 'openMenu', 126, 48, '', 'subtle');
           bind('menu', menuButton.label);
           this.alignCorner(menuButton.button.node, 'left');
           const splitControl = this.createButton(gameplayHudRoot, 'SplitControl', 'SWITCH BLOCK', Vec3.ZERO, 'switchCube', 176, 48);
@@ -1115,19 +1136,19 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           titleBand.setPosition(-visibleSize.width * 0.5 + 195, 0);
           this.drawPanel(titleBand, 390, visibleSize.height, new Color(12, 14, 17, 238));
           const titleY = Math.min(205, visibleSize.height * 0.32);
-          const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(0, titleY, 0), 350, 74, 58);
+          const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(0, titleY, 0), 350, 74, 58, 'display');
           title.node.setParent(titleBand);
           const subtitle = this.createLabel('GameSubtitle', 'ROLLING BLOCK PUZZLE', new Vec3(0, titleY - 50, 0), 350, 34, 14);
           subtitle.color = new Color(164, 166, 172, 255);
           subtitle.node.setParent(titleBand);
           bind('gameSubtitle', subtitle);
-          const startButton = this.createButton(titleBand, 'StartButton', 'START NEW GAME', new Vec3(0, 82, 0), 'startGame', 300, 42);
+          const startButton = this.createButton(titleBand, 'StartButton', 'START NEW GAME', new Vec3(0, 82, 0), 'startGame', 300, 42, '', 'primary');
           const resume = this.createButton(titleBand, 'ResumeButton', 'RESUME GAME', new Vec3(0, 32, 0), 'resumeGame', 300, 42);
           const loadStageButton = this.createButton(titleBand, 'LoadStageButton', 'LOAD STAGE', new Vec3(0, -18, 0), 'openStageSelect', 300, 42);
           const howToButton = this.createButton(titleBand, 'HowToButton', 'HOW TO PLAY', new Vec3(0, -68, 0), 'showHowToPlay', 300, 42);
-          const titleSoundButton = this.createButton(titleBand, 'TitleSoundButton', 'TOGGLE SOUND: ON', new Vec3(0, -118, 0), 'toggleSound', 300, 42);
-          const titleLanguageButton = this.createButton(titleBand, 'TitleLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -168, 0), 'cycleLanguage', 300, 42);
-          const creditsButton = this.createButton(titleBand, 'CreditsButton', 'CREDITS', new Vec3(0, -218, 0), 'showCredits', 300, 42);
+          const titleSoundButton = this.createButton(titleBand, 'TitleSoundButton', 'TOGGLE SOUND: ON', new Vec3(0, -118, 0), 'toggleSound', 300, 42, '', 'subtle');
+          const titleLanguageButton = this.createButton(titleBand, 'TitleLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -168, 0), 'cycleLanguage', 300, 42, '', 'subtle');
+          const creditsButton = this.createButton(titleBand, 'CreditsButton', 'CREDITS', new Vec3(0, -218, 0), 'showCredits', 300, 42, '', 'subtle');
           bind('startNewGame', startButton.label);
           bind('loadStage', loadStageButton.label);
           bind('howToPlay', howToButton.label);
@@ -1141,17 +1162,17 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           for (let index = 0; index < 33; index += 1) {
             const column = index % 11;
             const row = Math.floor(index / 11);
-            const stageButton = this.createButton(stageSelectRoot, `StageButton${index + 1}`, index < 9 ? `0${index + 1}` : String(index + 1), new Vec3((column - 5) * 61, 118 - row * 56, 0), 'selectStage', 52, 42, String(index));
+            const stageButton = this.createButton(stageSelectRoot, `StageButton${index + 1}`, index < 9 ? `0${index + 1}` : String(index + 1), new Vec3((column - 5) * 61, 118 - row * 56, 0), 'selectStage', 52, 42, String(index), 'stage');
             stageButtons.push(stageButton.button);
             stageButtonLabels.push(stageButton.label);
           }
           const passcodeInput = this.createPasscodeInput(stageSelectRoot, new Vec3(-70, -96, 0));
-          const passcodeButton = this.createButton(stageSelectRoot, 'PasscodeButton', 'ENTER', new Vec3(145, -96, 0), 'submitPasscode', 140, 52);
+          const passcodeButton = this.createButton(stageSelectRoot, 'PasscodeButton', 'ENTER', new Vec3(145, -96, 0), 'submitPasscode', 140, 52, '', 'primary');
           bind('enter', passcodeButton.label);
           const passcodeFeedback = this.createLabel('PasscodeFeedback', '', new Vec3(0, -145, 0), 460, 32, 15);
           passcodeFeedback.color = new Color(218, 91, 99, 255);
           passcodeFeedback.node.setParent(stageSelectRoot);
-          const stageBackButton = this.createButton(stageSelectRoot, 'StageBackButton', 'BACK', new Vec3(0, -196, 0), 'returnToTitle', 180, 44);
+          const stageBackButton = this.createButton(stageSelectRoot, 'StageBackButton', 'BACK', new Vec3(0, -196, 0), 'returnToTitle', 180, 44, '', 'subtle');
           bind('back', stageBackButton.label);
           stageSelectRoot.active = false;
           const howToPlayRoot = this.createOverlay('HowToPlay', safeArea, visibleSize.width, visibleSize.height, new Color(6, 7, 9, 248));
@@ -1170,8 +1191,8 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           howTopicProgressLabel.color = new Color(164, 166, 172, 255);
           howTopicProgressLabel.node.setParent(howToPlayRoot);
           const howPreviousButton = this.createButton(howToPlayRoot, 'HowPreviousButton', 'PREVIOUS', new Vec3(-150, -155, 0), 'previousHowTopic', 220, 44);
-          const howNextButton = this.createButton(howToPlayRoot, 'HowNextButton', 'NEXT', new Vec3(150, -155, 0), 'nextHowTopic', 220, 44);
-          const howBackButton = this.createButton(howToPlayRoot, 'HowBackButton', 'BACK', new Vec3(0, -205, 0), 'returnToTitle', 180, 44);
+          const howNextButton = this.createButton(howToPlayRoot, 'HowNextButton', 'NEXT', new Vec3(150, -155, 0), 'nextHowTopic', 220, 44, '', 'primary');
+          const howBackButton = this.createButton(howToPlayRoot, 'HowBackButton', 'BACK', new Vec3(0, -205, 0), 'returnToTitle', 180, 44, '', 'subtle');
           bind('previous', howPreviousButton.label);
           bind('next', howNextButton.label);
           bind('back', howBackButton.label);
@@ -1184,7 +1205,7 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           creditsCopy.lineHeight = 28;
           creditsCopy.node.setParent(creditsRoot);
           bind('creditsCopy', creditsCopy);
-          const creditsBackButton = this.createButton(creditsRoot, 'CreditsBackButton', 'BACK', new Vec3(0, -155, 0), 'returnToTitle', 180, 44);
+          const creditsBackButton = this.createButton(creditsRoot, 'CreditsBackButton', 'BACK', new Vec3(0, -155, 0), 'returnToTitle', 180, 44, '', 'subtle');
           bind('back', creditsBackButton.label);
           creditsRoot.active = false;
           const newGameConfirmRoot = this.createOverlay('NewGameConfirm', safeArea, visibleSize.width, visibleSize.height, new Color(3, 4, 5, 232));
@@ -1195,7 +1216,7 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           const confirmCopy = this.createLabel('ConfirmCopy', 'CURRENT CAMPAIGN PROGRESS WILL RESET.', new Vec3(0, 25, 0), 380, 34, 14);
           confirmCopy.color = new Color(174, 177, 184, 255);
           confirmCopy.node.setParent(confirmPanel);
-          const confirmNewButton = this.createButton(confirmPanel, 'ConfirmNewButton', 'START', new Vec3(-95, -58, 0), 'confirmNewGame', 170, 48);
+          const confirmNewButton = this.createButton(confirmPanel, 'ConfirmNewButton', 'START', new Vec3(-95, -58, 0), 'confirmNewGame', 170, 48, '', 'danger');
           const cancelNewButton = this.createButton(confirmPanel, 'CancelNewButton', 'CANCEL', new Vec3(95, -58, 0), 'cancelNewGame', 170, 48);
           bind('confirmNewGameTitle', confirmTitle);
           bind('confirmNewGameCopy', confirmCopy);
@@ -1210,8 +1231,8 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           failureTitle.node.setParent(failurePanel);
           const failureReasonLabel = this.createLabel('FailureReason', 'FELL INTO THE VOID', new Vec3(0, 30, 0), 360, 34, 15);
           failureReasonLabel.node.setParent(failurePanel);
-          const retryButton = this.createButton(failurePanel, 'RetryButton', 'RETRY', new Vec3(-95, -58, 0), 'retryLevel', 170, 48);
-          const failureQuitButton = this.createButton(failurePanel, 'FailureQuitButton', 'QUIT TO MENU', new Vec3(95, -58, 0), 'quitResultToMenu', 170, 48);
+          const retryButton = this.createButton(failurePanel, 'RetryButton', 'RETRY', new Vec3(-95, -58, 0), 'retryLevel', 170, 48, '', 'primary');
+          const failureQuitButton = this.createButton(failurePanel, 'FailureQuitButton', 'QUIT TO MENU', new Vec3(95, -58, 0), 'quitResultToMenu', 170, 48, '', 'danger');
           bind('stageFailed', failureTitle);
           bind('retry', retryButton.label);
           bind('quitToMenu', failureQuitButton.label);
@@ -1225,9 +1246,9 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           const completionStatsLabel = this.createLabel('CompletionStats', '', new Vec3(0, 40, 0), 360, 105, 17);
           completionStatsLabel.lineHeight = 28;
           completionStatsLabel.node.setParent(completionPanel);
-          const continueButton = this.createButton(completionPanel, 'ContinueButton', 'CONTINUE', new Vec3(0, -48, 0), 'continueAfterComplete', 300, 48);
+          const continueButton = this.createButton(completionPanel, 'ContinueButton', 'CONTINUE', new Vec3(0, -48, 0), 'continueAfterComplete', 300, 48, '', 'primary');
           const replayButton = this.createButton(completionPanel, 'ReplayButton', 'REPLAY', new Vec3(-95, -112, 0), 'replayLevel', 170, 44);
-          const completeQuitButton = this.createButton(completionPanel, 'CompleteQuitButton', 'QUIT TO MENU', new Vec3(95, -112, 0), 'quitResultToMenu', 170, 44);
+          const completeQuitButton = this.createButton(completionPanel, 'CompleteQuitButton', 'QUIT TO MENU', new Vec3(95, -112, 0), 'quitResultToMenu', 170, 44, '', 'danger');
           bind('stageComplete', completionTitle);
           bind('replay', replayButton.label);
           bind('quitToMenu', completeQuitButton.label);
@@ -1248,8 +1269,8 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           const tutorialProgressLabel = this.createLabel('TutorialProgress', '', new Vec3(-tutorialPanelWidth * 0.5 + 180, -67, 0), 180, 28, 13);
           tutorialProgressLabel.color = new Color(164, 166, 172, 255);
           tutorialProgressLabel.node.setParent(tutorialPanel);
-          const tutorialSkipButton = this.createButton(tutorialPanel, 'TutorialSkipButton', 'SKIP', new Vec3(tutorialPanelWidth * 0.5 - 220, -66, 0), 'skipTutorial', 140, 40);
-          const tutorialNextButton = this.createButton(tutorialPanel, 'TutorialNextButton', 'NEXT', new Vec3(tutorialPanelWidth * 0.5 - 70, -66, 0), 'acknowledgeTutorial', 110, 40);
+          const tutorialSkipButton = this.createButton(tutorialPanel, 'TutorialSkipButton', 'SKIP', new Vec3(tutorialPanelWidth * 0.5 - 220, -66, 0), 'skipTutorial', 140, 40, '', 'subtle');
+          const tutorialNextButton = this.createButton(tutorialPanel, 'TutorialNextButton', 'NEXT', new Vec3(tutorialPanelWidth * 0.5 - 70, -66, 0), 'acknowledgeTutorial', 110, 40, '', 'primary');
           bind('skip', tutorialSkipButton.label);
           tutorialRoot.active = false;
           const pauseMenuRoot = this.createOverlay('PauseMenu', safeArea, visibleSize.width, visibleSize.height, new Color(3, 4, 5, 232));
@@ -1257,10 +1278,10 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           this.drawPanel(pausePanel, 380, 390, new Color(25, 27, 31, 252));
           const pauseTitle = this.createLabel('PauseTitle', 'PAUSED', new Vec3(0, 150, 0), 320, 48, 30);
           pauseTitle.node.setParent(pausePanel);
-          const returnButton = this.createButton(pausePanel, 'ReturnButton', 'RETURN TO GAME', new Vec3(0, 78, 0), 'returnToGame', 300, 50);
+          const returnButton = this.createButton(pausePanel, 'ReturnButton', 'RETURN TO GAME', new Vec3(0, 78, 0), 'returnToGame', 300, 50, '', 'primary');
           const soundButton = this.createButton(pausePanel, 'SoundButton', 'TOGGLE SOUND: ON', new Vec3(0, 14, 0), 'toggleSound', 300, 50);
           const pauseLanguageButton = this.createButton(pausePanel, 'PauseLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -50, 0), 'cycleLanguage', 300, 50);
-          const quitButton = this.createButton(pausePanel, 'QuitButton', 'QUIT TO MENU', new Vec3(0, -114, 0), 'quitToMenu', 300, 50);
+          const quitButton = this.createButton(pausePanel, 'QuitButton', 'QUIT TO MENU', new Vec3(0, -114, 0), 'quitToMenu', 300, 50, '', 'danger');
           bind('paused', pauseTitle);
           bind('returnToGame', returnButton.label);
           bind('quitToMenu', quitButton.label);
@@ -1323,7 +1344,7 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           node.active = false;
           node.setPosition(position);
           this.drawPanel(node, inputWidth, inputHeight, new Color(25, 27, 31, 245));
-          const textLabel = this.createLabel('TEXT_LABEL', '', Vec3.ZERO, inputWidth, inputHeight, 22);
+          const textLabel = this.createLabel('TEXT_LABEL', '', Vec3.ZERO, inputWidth, inputHeight, 22, 'display');
           textLabel.node.setParent(node);
           const placeholderLabel = this.createLabel('PLACEHOLDER_LABEL', 'PASSCODE', Vec3.ZERO, inputWidth, inputHeight, 18);
           placeholderLabel.color = new Color(137, 139, 145, 255);
@@ -1366,13 +1387,14 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           node.addComponent(UITransform).setContentSize(width, height);
           return node;
         }
-        createLabel(name, text, position, width, height, fontSize) {
+        createLabel(name, text, position, width, height, fontSize, fontRole = 'ui') {
           const node = new Node(name);
           node.layer = Layers.Enum.UI_2D;
           node.addComponent(UITransform).setContentSize(width, height);
           node.setPosition(position);
           const label = node.addComponent(Label);
           label.string = text;
+          label.font = fontRole === 'display' ? this.displayFont : this.uiFont;
           label.fontSize = fontSize;
           label.lineHeight = fontSize + 4;
           label.horizontalAlign = HorizontalTextAlignment.CENTER;
@@ -1387,23 +1409,97 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           label.node.setParent(parent);
           return label;
         }
-        createButton(parent, name, text, position, handler, width, height, customEventData = '') {
+        createButton(parent, name, text, position, handler, width, height, customEventData = '', variant = 'secondary') {
           const buttonNode = this.createUiRoot(name, parent, width, height);
           buttonNode.setPosition(position);
-          this.createSolidRect(buttonNode, 'Border', width, height, new Color(105, 108, 116, 255));
-          this.createSolidRect(buttonNode, 'Fill', width - 2, height - 2, new Color(43, 45, 50, 246));
-          this.createSolidRect(buttonNode, 'Highlight', width - 4, 2, new Color(174, 177, 184, 255), new Vec3(0, height * 0.5 - 3, 0));
+          const palette = this.createButtonPalette(variant);
+          const borderSprites = this.createChamferedRect(buttonNode, 'Border', width, height, palette.border);
+          const fillSprites = this.createChamferedRect(buttonNode, 'Fill', width - 3, height - 3, palette.fill);
+          const accent = this.createSolidRect(buttonNode, 'Accent', variant === 'stage' ? 2 : 3, Math.max(12, height - 18), palette.accent, new Vec3(-width * 0.5 + 8, 0, 0));
           const button = buttonNode.addComponent(Button);
           button.target = buttonNode;
-          button.transition = Button.Transition.SCALE;
-          button.zoomScale = 1.035;
-          button.duration = 0.08;
+          button.transition = Button.Transition.NONE;
           button.clickEvents.push(this.createEventHandler(handler, customEventData));
-          const label = this.createLabel(`${name}Label`, text, Vec3.ZERO, width - 16, height - 8, 17);
+          const label = this.createLabel(`${name}Label`, text, Vec3.ZERO, width - 20, height - 8, variant === 'stage' ? 16 : 17, variant === 'stage' ? 'display' : 'ui');
           label.node.setParent(buttonNode);
+          buttonNode.addComponent(UiButtonVisual).setup(button, label, fillSprites, borderSprites, [accent], palette);
           return {
             button,
             label
+          };
+        }
+        createButtonPalette(variant) {
+          const disabledFill = new Color(39, 42, 47, 245);
+          const disabledBorder = new Color(67, 72, 79, 235);
+          const disabledText = new Color(112, 116, 124, 255);
+          const disabledAccent = new Color(76, 80, 87, 220);
+          if (variant === 'primary') {
+            return {
+              fill: new Color(154, 36, 45, 252),
+              hoverFill: new Color(181, 46, 55, 255),
+              pressedFill: new Color(122, 26, 35, 255),
+              disabledFill,
+              border: new Color(220, 84, 91, 255),
+              disabledBorder,
+              text: new Color(250, 246, 239, 255),
+              disabledText,
+              accent: new Color(230, 188, 101, 255),
+              disabledAccent
+            };
+          }
+          if (variant === 'danger') {
+            return {
+              fill: new Color(64, 28, 34, 252),
+              hoverFill: new Color(86, 34, 42, 255),
+              pressedFill: new Color(47, 22, 27, 255),
+              disabledFill,
+              border: new Color(151, 61, 69, 255),
+              disabledBorder,
+              text: new Color(238, 174, 178, 255),
+              disabledText,
+              accent: new Color(218, 91, 99, 255),
+              disabledAccent
+            };
+          }
+          if (variant === 'subtle') {
+            return {
+              fill: new Color(20, 23, 27, 238),
+              hoverFill: new Color(32, 36, 42, 252),
+              pressedFill: new Color(14, 17, 20, 255),
+              disabledFill,
+              border: new Color(66, 72, 81, 235),
+              disabledBorder,
+              text: new Color(198, 201, 207, 255),
+              disabledText,
+              accent: new Color(112, 119, 129, 255),
+              disabledAccent
+            };
+          }
+          if (variant === 'stage') {
+            return {
+              fill: new Color(28, 32, 37, 250),
+              hoverFill: new Color(43, 48, 55, 255),
+              pressedFill: new Color(19, 22, 26, 255),
+              disabledFill,
+              border: new Color(86, 93, 103, 245),
+              disabledBorder,
+              text: new Color(240, 239, 235, 255),
+              disabledText,
+              accent: new Color(218, 185, 105, 255),
+              disabledAccent
+            };
+          }
+          return {
+            fill: new Color(34, 38, 44, 250),
+            hoverFill: new Color(47, 52, 60, 255),
+            pressedFill: new Color(25, 29, 34, 255),
+            disabledFill,
+            border: new Color(103, 111, 123, 250),
+            disabledBorder,
+            text: new Color(242, 240, 235, 255),
+            disabledText,
+            accent: new Color(164, 173, 184, 255),
+            disabledAccent
           };
         }
         createEventHandler(handler, customEventData = '') {
@@ -1415,8 +1511,18 @@ System.register("chunks:///_virtual/GameplayBootstrap.ts", ['./rollupPluginModLo
           return event;
         }
         drawPanel(node, width, height, color) {
-          this.createSolidRect(node, 'Border', width, height, new Color(92, 95, 102, 230));
-          this.createSolidRect(node, 'Fill', width - 2, height - 2, color);
+          this.createChamferedRect(node, 'Border', width, height, new Color(92, 99, 110, 235));
+          this.createChamferedRect(node, 'Fill', width - 3, height - 3, color);
+          this.createSolidRect(node, 'PanelAccent', Math.min(58, width * 0.2), 2, new Color(190, 63, 70, 245), new Vec3(-width * 0.5 + Math.min(42, width * 0.14), height * 0.5 - 5, 0));
+        }
+        createChamferedRect(parent, name, width, height, color) {
+          const root = this.createUiRoot(name, parent, width, height);
+          const chamfer = Math.min(7, Math.max(3, Math.floor(Math.min(width, height) * 0.14)));
+          const capHeight = 2;
+          const shoulderHeight = chamfer - capHeight;
+          const capY = height * 0.5 - capHeight * 0.5;
+          const shoulderY = height * 0.5 - capHeight - shoulderHeight * 0.5;
+          return [this.createSolidRect(root, 'TopCap', width - chamfer * 2, capHeight, color, new Vec3(0, capY, 0)), this.createSolidRect(root, 'TopShoulder', width - chamfer, shoulderHeight, color, new Vec3(0, shoulderY, 0)), this.createSolidRect(root, 'Center', width, height - chamfer * 2, color), this.createSolidRect(root, 'BottomShoulder', width - chamfer, shoulderHeight, color, new Vec3(0, -shoulderY, 0)), this.createSolidRect(root, 'BottomCap', width - chamfer * 2, capHeight, color, new Vec3(0, -capY, 0))];
         }
         createSolidRect(parent, name, width, height, color, position = Vec3.ZERO) {
           const node = this.createUiRoot(name, parent, width, height);
@@ -2099,7 +2205,6 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
             const label = this.stageButtonLabels[index];
             if (label) {
               label.string = unlocked ? this.twoDigits(index + 1) : '--';
-              label.color.set(unlocked ? 241 : 104, unlocked ? 242 : 107, unlocked ? 245 : 114, 255);
             }
           });
         }
@@ -2110,7 +2215,6 @@ System.register("chunks:///_virtual/GameplayController.ts", ['./rollupPluginModL
             this.resumeButtonLabel.string = resumed ? translate(this.saveData.language, 'resumeGameStage', {
               stage: this.twoDigits(resumed.levelIndex + 1)
             }) : translate(this.saveData.language, 'resumeGame');
-            this.resumeButtonLabel.color.set(resumed ? 245 : 104, resumed ? 242 : 107, resumed ? 236 : 114, 255);
           }
           this.updateSoundLabels();
         }
@@ -3193,9 +3297,9 @@ System.register("chunks:///_virtual/localization.ts", ['cc'], function (exports)
   };
 });
 
-System.register("chunks:///_virtual/main", ['./AudioController.ts', './BlockPresenter.ts', './BoardRenderer.ts', './CameraController.ts', './GameplayBootstrap.ts', './GameplayController.ts', './MobileSafeArea.ts', './ReleaseSaveRepository.ts', './TouchInputController.ts', './PuzzleEngine.ts', './coords.ts', './index.ts', './level.ts', './localization.ts', './movement.ts', './onboarding.ts', './releaseSave.ts', './solver.ts', './types.ts', './index2.ts', './tutorialLevels.ts', './HarmonyOSAdapter.ts', './PlatformAdapter.ts', './index3.ts'], function () {
+System.register("chunks:///_virtual/main", ['./AudioController.ts', './BlockPresenter.ts', './BoardRenderer.ts', './CameraController.ts', './GameplayBootstrap.ts', './GameplayController.ts', './MobileSafeArea.ts', './ReleaseSaveRepository.ts', './TouchInputController.ts', './UiButtonVisual.ts', './PuzzleEngine.ts', './coords.ts', './index.ts', './level.ts', './localization.ts', './movement.ts', './onboarding.ts', './releaseSave.ts', './solver.ts', './types.ts', './index2.ts', './tutorialLevels.ts', './HarmonyOSAdapter.ts', './PlatformAdapter.ts', './index3.ts'], function () {
   return {
-    setters: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+    setters: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
     execute: function () {}
   };
 });
@@ -5145,6 +5249,140 @@ System.register("chunks:///_virtual/types.ts", ['cc'], function () {
     }],
     execute: function () {
       cclegacy._RF.push({}, "896eecGih1MTpx0VEa9RXdd", "types", undefined);
+      cclegacy._RF.pop();
+    }
+  };
+});
+
+System.register("chunks:///_virtual/UiButtonVisual.ts", ['cc'], function (exports) {
+  var cclegacy, Component, Vec3, Node, Color, Tween, tween, _decorator;
+  return {
+    setters: [function (module) {
+      cclegacy = module.cclegacy;
+      Component = module.Component;
+      Vec3 = module.Vec3;
+      Node = module.Node;
+      Color = module.Color;
+      Tween = module.Tween;
+      tween = module.tween;
+      _decorator = module._decorator;
+    }],
+    execute: function () {
+      var _dec, _class;
+      cclegacy._RF.push({}, "89839S7khpAYbzzp1lfIUaN", "UiButtonVisual", undefined);
+      const {
+        ccclass
+      } = _decorator;
+      let UiButtonVisual = exports('UiButtonVisual', (_dec = ccclass('UiButtonVisual'), _dec(_class = class UiButtonVisual extends Component {
+        constructor(...args) {
+          super(...args);
+          this.button = null;
+          this.label = null;
+          this.fillSprites = [];
+          this.borderSprites = [];
+          this.accentSprites = [];
+          this.palette = null;
+          this.restingScale = new Vec3(1, 1, 1);
+          this.restingLabelPosition = new Vec3();
+          this.pressed = false;
+          this.hovered = false;
+          this.lastInteractable = true;
+        }
+        setup(button, label, fillSprites, borderSprites, accentSprites, palette) {
+          this.button = button;
+          this.label = label;
+          this.fillSprites = [...fillSprites];
+          this.borderSprites = [...borderSprites];
+          this.accentSprites = [...accentSprites];
+          this.palette = palette;
+          this.restingScale.set(this.node.scale);
+          this.restingLabelPosition.set(label.node.position);
+          this.lastInteractable = button.interactable;
+          this.applyState();
+        }
+        onEnable() {
+          this.node.on(Node.EventType.TOUCH_START, this.handlePress, this);
+          this.node.on(Node.EventType.TOUCH_END, this.handleRelease, this);
+          this.node.on(Node.EventType.TOUCH_CANCEL, this.handleRelease, this);
+          this.node.on(Node.EventType.MOUSE_ENTER, this.handleMouseEnter, this);
+          this.node.on(Node.EventType.MOUSE_LEAVE, this.handleMouseLeave, this);
+        }
+        onDisable() {
+          this.node.off(Node.EventType.TOUCH_START, this.handlePress, this);
+          this.node.off(Node.EventType.TOUCH_END, this.handleRelease, this);
+          this.node.off(Node.EventType.TOUCH_CANCEL, this.handleRelease, this);
+          this.node.off(Node.EventType.MOUSE_ENTER, this.handleMouseEnter, this);
+          this.node.off(Node.EventType.MOUSE_LEAVE, this.handleMouseLeave, this);
+          this.restorePosition();
+        }
+        update() {
+          if (!this.button || this.lastInteractable === this.button.interactable) return;
+          this.lastInteractable = this.button.interactable;
+          if (!this.button.interactable) {
+            this.pressed = false;
+            this.hovered = false;
+            this.restorePosition();
+          }
+          this.applyState();
+        }
+        handlePress() {
+          var _this$button;
+          if (!((_this$button = this.button) != null && _this$button.interactable)) return;
+          this.pressed = true;
+          this.applyState();
+          this.animateScale(0.972, 0.055);
+          this.shiftLabel(-1);
+        }
+        handleRelease() {
+          if (!this.pressed) return;
+          this.pressed = false;
+          this.applyState();
+          this.animateScale(1, 0.1);
+          this.shiftLabel(0);
+        }
+        handleMouseEnter() {
+          this.hovered = true;
+          this.applyState();
+        }
+        handleMouseLeave() {
+          this.hovered = false;
+          this.handleRelease();
+          this.applyState();
+        }
+        applyState() {
+          if (!this.button || !this.label || !this.palette) return;
+          const disabled = !this.button.interactable;
+          const fill = disabled ? this.palette.disabledFill : this.pressed ? this.palette.pressedFill : this.hovered ? this.palette.hoverFill : this.palette.fill;
+          const border = disabled ? this.palette.disabledBorder : this.palette.border;
+          const accent = disabled ? this.palette.disabledAccent : this.palette.accent;
+          const text = disabled ? this.palette.disabledText : this.palette.text;
+          this.setSpritesColor(this.fillSprites, fill);
+          this.setSpritesColor(this.borderSprites, border);
+          this.setSpritesColor(this.accentSprites, accent);
+          this.label.color = this.copyColor(text);
+        }
+        setSpritesColor(sprites, color) {
+          for (const sprite of sprites) sprite.color = this.copyColor(color);
+        }
+        copyColor(color) {
+          return new Color(color.r, color.g, color.b, color.a);
+        }
+        animateScale(scale, duration) {
+          Tween.stopAllByTarget(this.node);
+          tween(this.node).to(duration, {
+            scale: new Vec3(this.restingScale.x * scale, this.restingScale.y * scale, this.restingScale.z)
+          }).start();
+        }
+        shiftLabel(offsetY) {
+          var _this$label;
+          (_this$label = this.label) == null || _this$label.node.setPosition(this.restingLabelPosition.x, this.restingLabelPosition.y + offsetY, this.restingLabelPosition.z);
+        }
+        restorePosition() {
+          Tween.stopAllByTarget(this.node);
+          this.node.setScale(this.restingScale);
+          this.shiftLabel(0);
+        }
+      }) || _class));
       cclegacy._RF.pop();
     }
   };
