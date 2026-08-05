@@ -90,11 +90,12 @@ export class GameplayBootstrap extends Component {
   litBaseMaterial: Material | null = null;
 
   private solidSpriteFrame: SpriteFrame | null = null;
+  private logoSpriteFrame: SpriteFrame | null = null;
   private uiFont: TTFFont | null = null;
   private displayFont: TTFFont | null = null;
 
   start(): void {
-    let pending = 2;
+    let pending = 3;
     const complete = (): void => {
       pending -= 1;
       if (pending === 0) this.initialize();
@@ -107,6 +108,15 @@ export class GameplayBootstrap extends Component {
     resources.load('fonts/Oxanium-SemiBold', TTFFont, (error, font) => {
       if (error) console.warn('Display font failed to load.', error);
       else this.displayFont = font;
+      complete();
+    });
+    resources.load('ui/cubic-mark/texture', Texture2D, (error, texture) => {
+      if (error) console.warn('Game logo failed to load.', error);
+      else {
+        const spriteFrame = new SpriteFrame();
+        spriteFrame.texture = texture;
+        this.logoSpriteFrame = spriteFrame;
+      }
       complete();
     });
   }
@@ -358,7 +368,15 @@ export class GameplayBootstrap extends Component {
     titleBand.setPosition(-visibleSize.width * 0.5 + 195, 0);
     this.drawPanel(titleBand, 390, visibleSize.height, new Color(12, 14, 17, 238));
     const titleY = Math.min(205, visibleSize.height * 0.32);
-    const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(0, titleY, 0), 350, 74, 58, 'display');
+    if (this.logoSpriteFrame) {
+      const logoSize = Math.min(82, visibleSize.height * 0.15);
+      const logoNode = this.createUiRoot('GameLogo', titleBand, logoSize, logoSize);
+      logoNode.setPosition(-96, titleY);
+      const logo = logoNode.addComponent(Sprite);
+      logo.sizeMode = Sprite.SizeMode.CUSTOM;
+      logo.spriteFrame = this.logoSpriteFrame;
+    }
+    const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(40, titleY, 0), 250, 74, 58, 'display');
     title.node.setParent(titleBand);
     const subtitle = this.createLabel(
       'GameSubtitle',
