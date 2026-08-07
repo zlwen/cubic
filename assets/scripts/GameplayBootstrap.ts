@@ -115,6 +115,7 @@ export class GameplayBootstrap extends Component {
       else {
         const spriteFrame = new SpriteFrame();
         spriteFrame.texture = texture;
+        spriteFrame.packable = false;
         this.logoSpriteFrame = spriteFrame;
       }
       complete();
@@ -1035,6 +1036,7 @@ export class GameplayBootstrap extends Component {
     if (!this.solidSpriteFrame) {
       const spriteFrame = new SpriteFrame();
       spriteFrame.texture = builtinResMgr.get<Texture2D>('white-texture');
+      spriteFrame.packable = false;
       this.solidSpriteFrame = spriteFrame;
     }
     return this.solidSpriteFrame;
