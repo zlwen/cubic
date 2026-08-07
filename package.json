@@ -1,6 +1,6 @@
 {
   "name": "cubic",
-  "version": "1.0.0",
+  "version": "3.8.8",
   "private": true,
   "description": "Original mobile 3D rolling-block puzzle built with Cocos Creator.",
   "scripts": {

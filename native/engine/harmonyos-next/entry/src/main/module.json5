@@ -8,6 +8,16 @@
       "phone",
       "tablet"
     ],
+    "metadata": [ // 配置如下信息
+      {
+        "name": "client_id",
+        "value": "6917612759344509597" // 配置为前面步骤中获取的Client ID
+      },
+      {
+        "name": "app_id",
+        "value": "6917612759344509597" // 配置为前面步骤中获取的APP ID
+      }
+    ],
     "requestPermissions": [
       {
         "name": "ohos.permission.INTERNET"
