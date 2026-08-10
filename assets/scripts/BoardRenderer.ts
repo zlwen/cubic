@@ -170,9 +170,12 @@ export class BoardRenderer extends Component {
       first.setRotationFromEuler(0, 45, 0);
       second.setRotationFromEuler(0, -45, 0);
     } else if (tile.type === 'split') {
-      for (const [x, z] of [[-0.22, -0.22], [0.22, -0.22], [-0.22, 0.22], [0.22, 0.22]]) {
-        this.addBox(tileNode, 'SplitMarker', new Vec3(0.12, 0.025, 0.12), new Vec3(x, 0.145, z), new Color(102, 91, 158, 255));
-      }
+      const markerColor = new Color(102, 91, 158, 255);
+      const left = this.addCylinder(tileNode, 'SplitDoorLeft', 0.21, 0.04, new Vec3(-0.22, 0.155, 0), markerColor, 3);
+      const right = this.addCylinder(tileNode, 'SplitDoorRight', 0.21, 0.04, new Vec3(0.22, 0.155, 0), markerColor, 3);
+      left.setRotationFromEuler(0, -90, 0);
+      right.setRotationFromEuler(0, 90, 0);
+      this.addBox(tileNode, 'SplitDoorDivider', new Vec3(0.045, 0.04, 0.5), new Vec3(0, 0.155, 0), markerColor);
     }
   }
 
@@ -303,12 +306,20 @@ export class BoardRenderer extends Component {
     return node;
   }
 
-  private addCylinder(parent: Node, name: string, radius: number, height: number, position: Vec3, color: Color): Node {
+  private addCylinder(
+    parent: Node,
+    name: string,
+    radius: number,
+    height: number,
+    position: Vec3,
+    color: Color,
+    radialSegments = 20,
+  ): Node {
     const node = new Node(name);
     node.setParent(parent);
     node.setPosition(position);
     const renderer = node.addComponent(MeshRenderer);
-    renderer.mesh = utils.createMesh(primitives.cylinder(radius, radius, height, { radialSegments: 20 }));
+    renderer.mesh = utils.createMesh(primitives.cylinder(radius, radius, height, { radialSegments }));
     renderer.setMaterial(this.getLitMaterial(color), 0);
     this.configureShadowReceiver(renderer);
     return node;
