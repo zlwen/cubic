@@ -18,6 +18,7 @@ export const tutorialTopicIds = [
 ] as const;
 
 export type TutorialTopicId = typeof tutorialTopicIds[number];
+export type StarRating = 1 | 2 | 3;
 
 export interface SavedRun {
   readonly levelId: string;
@@ -32,6 +33,7 @@ export interface ReleaseSaveData {
   readonly soundEnabled: boolean;
   readonly language: GameLanguage;
   readonly acknowledgedTutorials: readonly TutorialTopicId[];
+  readonly bestStarsByLevel: Readonly<Record<string, StarRating>>;
 }
 
 export interface ResumedRun {
@@ -56,6 +58,7 @@ export function createDefaultReleaseSave(
     soundEnabled: true,
     language,
     acknowledgedTutorials: [],
+    bestStarsByLevel: {},
   };
 }
 
@@ -89,6 +92,7 @@ export function normalizeReleaseSave(
   const acknowledgedTutorials = Array.isArray(input.acknowledgedTutorials)
     ? [...new Set(input.acknowledgedTutorials.filter(isTutorialTopicId))]
     : defaults.acknowledgedTutorials;
+  const bestStarsByLevel = normalizeBestStars(input.bestStarsByLevel, levels);
   const currentRun = input.version === RELEASE_SAVE_VERSION
     ? normalizeSavedRun(input.currentRun, levels)
     : null;
@@ -100,6 +104,7 @@ export function normalizeReleaseSave(
     soundEnabled,
     language,
     acknowledgedTutorials,
+    bestStarsByLevel,
   };
 }
 
@@ -148,6 +153,33 @@ export function withUnlockedLevel(
   };
 }
 
+export function calculateStarRating(optimalMoves: number, playerMoves: number): StarRating {
+  const optimal = Math.max(1, Math.floor(optimalMoves));
+  const actual = Math.max(0, Math.floor(playerMoves));
+  if (actual <= optimal) return 3;
+  if (actual <= Math.ceil(optimal * 1.25)) return 2;
+  return 1;
+}
+
+export function getBestStarRating(save: ReleaseSaveData, levelId: string): StarRating | 0 {
+  return save.bestStarsByLevel[levelId] ?? 0;
+}
+
+export function withBestStarRating(
+  save: ReleaseSaveData,
+  levelId: string,
+  rating: StarRating,
+): ReleaseSaveData {
+  if (getBestStarRating(save, levelId) >= rating) return save;
+  return {
+    ...save,
+    bestStarsByLevel: {
+      ...save.bestStarsByLevel,
+      [levelId]: rating,
+    },
+  };
+}
+
 export function resetCampaignProgress(
   save: ReleaseSaveData,
   levels: readonly LevelDefinition[],
@@ -157,6 +189,7 @@ export function resetCampaignProgress(
     ...save,
     currentRun: null,
     highestUnlockedLevelId: levels[0].id,
+    bestStarsByLevel: {},
   };
 }
 
@@ -199,12 +232,29 @@ function validLevelId(input: unknown, levels: readonly LevelDefinition[]): strin
   return levels.some((level) => level.id === input) ? input : null;
 }
 
+function normalizeBestStars(
+  input: unknown,
+  levels: readonly LevelDefinition[],
+): Readonly<Record<string, StarRating>> {
+  if (!isRecord(input)) return {};
+  const result: Record<string, StarRating> = {};
+  for (const level of levels) {
+    const rating = input[level.id];
+    if (isStarRating(rating)) result[level.id] = rating;
+  }
+  return result;
+}
+
 function isPuzzleAction(value: unknown): value is PuzzleAction {
   return typeof value === 'string' && directions.has(value as PuzzleAction);
 }
 
 function isTutorialTopicId(value: unknown): value is TutorialTopicId {
   return typeof value === 'string' && tutorialTopics.has(value);
+}
+
+function isStarRating(value: unknown): value is StarRating {
+  return value === 1 || value === 2 || value === 3;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -65,6 +65,7 @@ interface GameplayUi {
   readonly resumeButtonLabel: Label;
   readonly failureReasonLabel: Label;
   readonly completionStatsLabel: Label;
+  readonly completionStarsLabel: Label;
   readonly completionContinueLabel: Label;
   readonly tutorialTitleLabel: Label;
   readonly tutorialSymbolLabel: Label;
@@ -78,6 +79,7 @@ interface GameplayUi {
   readonly splitControlRoot: Node;
   readonly stageButtons: Button[];
   readonly stageButtonLabels: Label[];
+  readonly stageStarLabels: Label[];
   readonly localizedLabels: Partial<Record<UiTextKey, Label[]>>;
 }
 
@@ -168,6 +170,7 @@ export class GameplayBootstrap extends Component {
     gameplay.resumeButtonLabel = ui.resumeButtonLabel;
     gameplay.failureReasonLabel = ui.failureReasonLabel;
     gameplay.completionStatsLabel = ui.completionStatsLabel;
+    gameplay.completionStarsLabel = ui.completionStarsLabel;
     gameplay.completionContinueLabel = ui.completionContinueLabel;
     gameplay.tutorialTitleLabel = ui.tutorialTitleLabel;
     gameplay.tutorialSymbolLabel = ui.tutorialSymbolLabel;
@@ -181,6 +184,7 @@ export class GameplayBootstrap extends Component {
     gameplay.splitControlRoot = ui.splitControlRoot;
     gameplay.stageButtons = ui.stageButtons;
     gameplay.stageButtonLabels = ui.stageButtonLabels;
+    gameplay.stageStarLabels = ui.stageStarLabels;
     gameplay.localizedLabels = ui.localizedLabels;
   }
 
@@ -356,7 +360,7 @@ export class GameplayBootstrap extends Component {
     const levelStatLabel = this.createStatLabel(statsCluster, 'LevelStat', 'LEVEL\n01 / 33', -195);
     const movesStatLabel = this.createStatLabel(statsCluster, 'MovesStat', 'MOVES\n0', -65);
     const timeStatLabel = this.createStatLabel(statsCluster, 'TimeStat', 'TIME\n00:00', 65);
-    const passcodeStatLabel = this.createStatLabel(statsCluster, 'PasscodeStat', 'PASSCODE\nRIFT', 195);
+    const passcodeStatLabel = this.createStatLabel(statsCluster, 'PasscodeStat', 'PASSCODE\n780464', 195);
 
     const titleMenuRoot = this.createOverlay(
       'TitleMenu',
@@ -414,6 +418,7 @@ export class GameplayBootstrap extends Component {
     bind('loadStage', stageTitle);
     const stageButtons: Button[] = [];
     const stageButtonLabels: Label[] = [];
+    const stageStarLabels: Label[] = [];
     for (let index = 0; index < 33; index += 1) {
       const column = index % 11;
       const row = Math.floor(index / 11);
@@ -428,8 +433,24 @@ export class GameplayBootstrap extends Component {
         String(index),
         'stage',
       );
+      stageButton.label.fontSize = 14;
+      stageButton.label.lineHeight = 18;
+      stageButton.label.node.getComponent(UITransform)?.setContentSize(32, 18);
+      stageButton.label.node.setPosition(0, 6, 0);
+      const starLabel = this.createLabel(
+        `StageStars${index + 1}`,
+        '',
+        new Vec3(0, -10, 0),
+        38,
+        10,
+        8,
+      );
+      starLabel.lineHeight = 10;
+      starLabel.color = new Color(218, 185, 105, 255);
+      starLabel.node.setParent(stageButton.button.node);
       stageButtons.push(stageButton.button);
       stageButtonLabels.push(stageButton.label);
+      stageStarLabels.push(starLabel);
     }
     const passcodeInput = this.createPasscodeInput(stageSelectRoot, new Vec3(-70, -96, 0));
     const passcodeButton = this.createButton(stageSelectRoot, 'PasscodeButton', 'ENTER', new Vec3(145, -96, 0), 'submitPasscode', 140, 52, '', 'primary');
@@ -489,7 +510,7 @@ export class GameplayBootstrap extends Component {
     bind('credits', creditsTitle);
     const creditsCopy = this.createLabel(
       'CreditsCopy',
-      'DESIGN & DEVELOPMENT\nCUBIC TEAM\n\nORIGINAL LEVELS, VISUALS & AUDIO\nCREATED FOR CUBIC',
+      'DESIGN & DEVELOPMENT\nCUBIC TEAM\n\nLEVEL DATA\nBLOXORZ.GBA / JACOB COUGHENOUR\nMIT LICENSE',
       new Vec3(0, 15, 0),
       620,
       210,
@@ -552,17 +573,20 @@ export class GameplayBootstrap extends Component {
       visibleSize.height,
       new Color(3, 4, 5, 224),
     );
-    const completionPanel = this.createUiRoot('CompletionPanel', completionRoot, 460, 340);
-    this.drawPanel(completionPanel, 460, 340, new Color(25, 27, 31, 252));
-    const completionTitle = this.createLabel('CompletionTitle', 'STAGE COMPLETE', new Vec3(0, 125, 0), 400, 48, 30);
+    const completionPanel = this.createUiRoot('CompletionPanel', completionRoot, 460, 360);
+    this.drawPanel(completionPanel, 460, 360, new Color(25, 27, 31, 252));
+    const completionTitle = this.createLabel('CompletionTitle', 'STAGE COMPLETE', new Vec3(0, 137, 0), 400, 48, 30);
     completionTitle.color = new Color(154, 202, 193, 255);
     completionTitle.node.setParent(completionPanel);
-    const completionStatsLabel = this.createLabel('CompletionStats', '', new Vec3(0, 40, 0), 360, 105, 17);
+    const completionStarsLabel = this.createLabel('CompletionStars', '☆☆☆', new Vec3(0, 96, 0), 300, 36, 30);
+    completionStarsLabel.color = new Color(218, 185, 105, 255);
+    completionStarsLabel.node.setParent(completionPanel);
+    const completionStatsLabel = this.createLabel('CompletionStats', '', new Vec3(0, 30, 0), 390, 84, 17);
     completionStatsLabel.lineHeight = 28;
     completionStatsLabel.node.setParent(completionPanel);
-    const continueButton = this.createButton(completionPanel, 'ContinueButton', 'CONTINUE', new Vec3(0, -48, 0), 'continueAfterComplete', 300, 48, '', 'primary');
-    const replayButton = this.createButton(completionPanel, 'ReplayButton', 'REPLAY', new Vec3(-95, -112, 0), 'replayLevel', 170, 44);
-    const completeQuitButton = this.createButton(completionPanel, 'CompleteQuitButton', 'QUIT TO MENU', new Vec3(95, -112, 0), 'quitResultToMenu', 170, 44, '', 'danger');
+    const continueButton = this.createButton(completionPanel, 'ContinueButton', 'CONTINUE', new Vec3(0, -58, 0), 'continueAfterComplete', 300, 48, '', 'primary');
+    const replayButton = this.createButton(completionPanel, 'ReplayButton', 'REPLAY', new Vec3(-95, -122, 0), 'replayLevel', 170, 44);
+    const completeQuitButton = this.createButton(completionPanel, 'CompleteQuitButton', 'QUIT TO MENU', new Vec3(95, -122, 0), 'quitResultToMenu', 170, 44, '', 'danger');
     bind('stageComplete', completionTitle);
     bind('replay', replayButton.label);
     bind('quitToMenu', completeQuitButton.label);
@@ -676,6 +700,7 @@ export class GameplayBootstrap extends Component {
       resumeButtonLabel: resume.label,
       failureReasonLabel,
       completionStatsLabel,
+      completionStarsLabel,
       completionContinueLabel: continueButton.label,
       tutorialTitleLabel,
       tutorialSymbolLabel,
@@ -689,6 +714,7 @@ export class GameplayBootstrap extends Component {
       splitControlRoot: splitControl.button.node,
       stageButtons,
       stageButtonLabels,
+      stageStarLabels,
       localizedLabels,
     };
   }
@@ -741,9 +767,9 @@ export class GameplayBootstrap extends Component {
     }
     editBox.string = '';
     editBox.placeholder = 'PASSCODE';
-    editBox.maxLength = 4;
-    editBox.inputMode = EditBox.InputMode.SINGLE_LINE;
-    editBox.inputFlag = EditBox.InputFlag.INITIAL_CAPS_ALL_CHARACTERS;
+    editBox.maxLength = 6;
+    editBox.inputMode = EditBox.InputMode.NUMERIC;
+    editBox.inputFlag = EditBox.InputFlag.DEFAULT;
     editBox.returnType = EditBox.KeyboardReturnType.DONE;
 
     const returnEvent = this.createEventHandler('submitPasscode');

@@ -2,7 +2,7 @@ import { _decorator, AudioClip, AudioSource, Component, Node, resources } from '
 
 const { ccclass } = _decorator;
 
-type EffectName = 'move1' | 'move2' | 'move3' | 'fall' | 'complete' | 'ui';
+type EffectName = 'move1' | 'move2' | 'move3' | 'fall' | 'glass' | 'complete' | 'ui';
 
 @ccclass('AudioController')
 export class AudioController extends Component {
@@ -23,6 +23,7 @@ export class AudioController extends Component {
     this.loadEffect('audio/move-stone-2', 'move2');
     this.loadEffect('audio/move-stone-3', 'move3');
     this.loadEffect('audio/fall', 'fall');
+    this.loadEffect('audio/glass-break', 'glass');
     this.loadEffect('audio/complete', 'complete');
     this.loadEffect('audio/ui-click', 'ui');
     resources.load('audio/ambient-loop', AudioClip, (error, clip) => {
@@ -49,6 +50,10 @@ export class AudioController extends Component {
 
   playFall(): void {
     this.play('fall', 0.82);
+  }
+
+  playGlassBreak(): void {
+    this.play('glass', 0.72);
   }
 
   playComplete(): void {

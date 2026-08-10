@@ -11,47 +11,51 @@ const directions: readonly PuzzleAction[] = ['up', 'down', 'left', 'right'];
 
 export function findSolution(level: LevelDefinition, maxVisited = 20_000): SolverResult {
   const initial = new PuzzleEngine(level).getState();
-  const queue: PuzzleAction[][] = [[]];
-  const seen = new Set<string>([stateKey(initial)]);
-  let queueIndex = 0;
+  const queues: Array<Array<{ path: PuzzleAction[]; state: PuzzleState }>> = [
+    [{ path: [], state: initial }],
+  ];
+  const bestMoveCounts = new Map<string, number>([[stateKey(initial), 0]]);
+  let visitedStates = 1;
+  let exhausted = true;
 
-  while (queueIndex < queue.length && seen.size < maxVisited) {
-    const path = queue[queueIndex];
-    queueIndex += 1;
-    const engine = replay(level, path);
-    const actions = engine.getState().split ? [...directions, 'switch-cube' as const] : directions;
+  for (let moveCount = 0; moveCount < queues.length && visitedStates < maxVisited; moveCount += 1) {
+    const queue = queues[moveCount] ?? [];
+    for (let queueIndex = 0; queueIndex < queue.length && visitedStates < maxVisited; queueIndex += 1) {
+      const { path, state: current } = queue[queueIndex];
+      const actions = current.split ? [...directions, 'switch-cube' as const] : directions;
 
-    for (const action of actions) {
-      const candidate = new PuzzleEngine(level);
-      replayInto(candidate, path);
-      if (action === 'switch-cube') candidate.switchActiveCube();
-      else candidate.move(action);
+      for (const action of actions) {
+        const candidate = new PuzzleEngine(level);
+        replayInto(candidate, path);
+        if (action === 'switch-cube') candidate.switchActiveCube();
+        else candidate.move(action);
 
-      const state = candidate.getState();
-      if (state.failed) continue;
-      const nextPath = [...path, action];
-      if (state.completed) {
-        return { solution: nextPath, visitedStates: seen.size, exhausted: false };
+        const state = candidate.getState();
+        if (state.failed) continue;
+        const nextPath = [...path, action];
+        if (state.completed) {
+          return { solution: nextPath, visitedStates, exhausted: false };
+        }
+        const nextMoveCount = moveCount + (action === 'switch-cube' ? 0 : 1);
+        const key = stateKey(state);
+        if ((bestMoveCounts.get(key) ?? Number.POSITIVE_INFINITY) <= nextMoveCount) continue;
+        bestMoveCounts.set(key, nextMoveCount);
+        visitedStates += 1;
+        if (!queues[nextMoveCount]) queues[nextMoveCount] = [];
+        queues[nextMoveCount].push({ path: nextPath, state });
+        if (visitedStates >= maxVisited) {
+          exhausted = false;
+          break;
+        }
       }
-      const key = stateKey(state);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      queue.push(nextPath);
-      if (seen.size >= maxVisited) break;
     }
   }
 
   return {
     solution: null,
-    visitedStates: seen.size,
-    exhausted: queueIndex >= queue.length,
+    visitedStates,
+    exhausted,
   };
-}
-
-function replay(level: LevelDefinition, path: readonly PuzzleAction[]): PuzzleEngine {
-  const engine = new PuzzleEngine(level);
-  replayInto(engine, path);
-  return engine;
 }
 
 function replayInto(engine: PuzzleEngine, path: readonly PuzzleAction[]): void {

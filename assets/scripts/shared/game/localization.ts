@@ -28,7 +28,7 @@ const englishUi = {
   next: 'NEXT',
   gotIt: 'GOT IT',
   skip: 'SKIP',
-  creditsCopy: 'DESIGN & DEVELOPMENT\nCUBIC TEAM\n\nORIGINAL LEVELS, VISUALS & AUDIO\nCREATED FOR CUBIC',
+  creditsCopy: 'DESIGN & DEVELOPMENT\nCUBIC TEAM\n\nLEVEL DATA\nBLOXORZ.GBA / JACOB COUGHENOUR\nMIT LICENSE',
   confirmNewGameTitle: 'START NEW GAME?',
   confirmNewGameCopy: 'CURRENT CAMPAIGN PROGRESS WILL RESET.',
   start: 'START',
@@ -45,7 +45,7 @@ const englishUi = {
   paused: 'PAUSED',
   returnToGame: 'RETURN TO GAME',
   invalidPasscode: 'INVALID PASSCODE',
-  completionStats: 'MOVES  {moves}\nTIME  {time}\nPASSCODE  {passcode}',
+  completionStats: 'MOVES  {moves} / BEST  {optimal}\nTIME  {time}\nPASSCODE  {passcode}',
 } as const;
 
 export type UiTextKey = keyof typeof englishUi;
@@ -77,7 +77,7 @@ const uiCatalogs: Record<GameLanguage, UiCatalog> = {
     next: '下一项',
     gotIt: '知道了',
     skip: '跳过',
-    creditsCopy: '设计与开发\nCUBIC 团队\n\n原创关卡、画面与音效\n为 CUBIC 创作',
+    creditsCopy: '设计与开发\nCUBIC 团队\n\n关卡数据\nBLOXORZ.GBA / JACOB COUGHENOUR\nMIT 许可证',
     confirmNewGameTitle: '开始新游戏？',
     confirmNewGameCopy: '当前关卡进度将被重置。',
     start: '开始',
@@ -94,7 +94,7 @@ const uiCatalogs: Record<GameLanguage, UiCatalog> = {
     paused: '已暂停',
     returnToGame: '返回游戏',
     invalidPasscode: '密码无效',
-    completionStats: '步数  {moves}\n时间  {time}\n密码  {passcode}',
+    completionStats: '步数  {moves} / 最优  {optimal}\n时间  {time}\n密码  {passcode}',
   },
   'zh-TW': {
     gameSubtitle: '滾動方塊謎題',
@@ -120,7 +120,7 @@ const uiCatalogs: Record<GameLanguage, UiCatalog> = {
     next: '下一項',
     gotIt: '知道了',
     skip: '跳過',
-    creditsCopy: '設計與開發\nCUBIC 團隊\n\n原創關卡、畫面與音效\n為 CUBIC 創作',
+    creditsCopy: '設計與開發\nCUBIC 團隊\n\n關卡資料\nBLOXORZ.GBA / JACOB COUGHENOUR\nMIT 授權條款',
     confirmNewGameTitle: '開始新遊戲？',
     confirmNewGameCopy: '目前關卡進度將被重設。',
     start: '開始',
@@ -137,7 +137,7 @@ const uiCatalogs: Record<GameLanguage, UiCatalog> = {
     paused: '已暫停',
     returnToGame: '返回遊戲',
     invalidPasscode: '密碼無效',
-    completionStats: '步數  {moves}\n時間  {time}\n密碼  {passcode}',
+    completionStats: '步數  {moves} / 最優  {optimal}\n時間  {time}\n密碼  {passcode}',
   },
 };
 
@@ -167,7 +167,7 @@ const onboardingCatalogs: Record<GameLanguage, Record<TutorialTopicId, Onboardin
     'soft-switch': {
       title: 'SOFT SWITCH',
       symbol: 'ROUND\nPRESS',
-      body: 'Any part of the whole block or either split cube can press it. Each press toggles its bridge between visible and hidden.',
+      body: 'Any part of the whole block or either split cube can press it. A switch may open, close, or toggle its linked bridges.',
     },
     'hard-switch': {
       title: 'HARD SWITCH',
@@ -214,7 +214,7 @@ const onboardingCatalogs: Record<GameLanguage, Record<TutorialTopicId, Onboardin
     'soft-switch': {
       title: '轻触机关',
       symbol: '圆形\n按压',
-      body: '完整方块的任一部分或分裂后的小方块都能按下圆形机关；每次按压都会切换相连方块的显示与隐藏。',
+      body: '完整方块的任一部分或分裂后的小方块都能按下圆形机关；不同机关会开启、关闭或切换相连的桥梁。',
     },
     'hard-switch': {
       title: '重压机关',
@@ -261,7 +261,7 @@ const onboardingCatalogs: Record<GameLanguage, Record<TutorialTopicId, Onboardin
     'soft-switch': {
       title: '輕觸機關',
       symbol: '圓形\n按壓',
-      body: '完整方塊的任一部分或分裂後的小方塊都能按下圓形機關；每次按壓都會切換相連方塊的顯示與隱藏。',
+      body: '完整方塊的任一部分或分裂後的小方塊都能按下圓形機關；不同機關會開啟、關閉或切換相連的橋梁。',
     },
     'hard-switch': {
       title: '重壓機關',

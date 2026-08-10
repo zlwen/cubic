@@ -91,6 +91,24 @@ writeWav('complete.wav', 1.05, (time) => {
   }, 0);
 });
 
+{
+  const noise = seededNoise(505);
+  const tones = [1240, 1690, 2170, 2860];
+  writeWav('glass-break.wav', 0.62, (time) => {
+    const crack = noise() * Math.exp(-time * 34) * 0.5;
+    const body = Math.sin(Math.PI * 2 * 132 * time) * Math.exp(-time * 18) * 0.18;
+    const fragments = tones.reduce((sample, frequency, index) => {
+      const start = 0.035 + index * 0.045;
+      const local = time - start;
+      if (local < 0) return sample;
+      const ring = Math.sin(Math.PI * 2 * frequency * local) * Math.exp(-local * (10 + index * 2));
+      const tick = noise() * Math.exp(-local * 42);
+      return sample + ring * 0.09 + tick * 0.045;
+    }, 0);
+    return crack + body + fragments;
+  });
+}
+
 writeWav('ambient-loop.wav', 8, (time) => {
   const modulation = 0.72 + Math.sin(Math.PI * 2 * 0.125 * time) * 0.14;
   const low = Math.sin(Math.PI * 2 * 55 * time) * 0.075;

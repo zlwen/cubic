@@ -14,7 +14,9 @@ import {
   view,
 } from 'cc';
 import {
+  calculateStarRating,
   createDefaultReleaseSave,
+  getBestStarRating,
   getHighestUnlockedIndex,
   getLocalizedOnboardingCopy,
   languageDisplayName,
@@ -26,6 +28,7 @@ import {
   resumeSavedRun,
   translate,
   withUnlockedLevel,
+  withBestStarRating,
 } from './shared/game/index';
 import type {
   Direction,
@@ -154,6 +157,9 @@ export class GameplayController extends Component {
   completionStatsLabel: Label | null = null;
 
   @property(Label)
+  completionStarsLabel: Label | null = null;
+
+  @property(Label)
   completionContinueLabel: Label | null = null;
 
   @property(Label)
@@ -188,6 +194,7 @@ export class GameplayController extends Component {
 
   stageButtons: Button[] = [];
   stageButtonLabels: Label[] = [];
+  stageStarLabels: Label[] = [];
   localizedLabels: Partial<Record<UiTextKey, Label[]>> = {};
 
   private readonly platform = createPlatformAdapter();
@@ -532,6 +539,11 @@ export class GameplayController extends Component {
     this.block.playMove(result, () => {
       this.board?.applyState(result.current);
       if (result.status === 'fallen') {
+        const brokeFragileTile = result.message?.includes('fragile') === true;
+        if (brokeFragileTile && result.occupiedCells[0]) {
+          this.board?.playFragileBreak(result.occupiedCells[0]);
+          this.audioController?.playGlassBreak();
+        }
         this.audioController?.playFall();
         this.platform.vibrateLight();
         this.updateHud();
@@ -570,8 +582,14 @@ export class GameplayController extends Component {
     this.audioController?.playComplete();
     this.platform.onLevelCompleted(result.current.levelId, result.current.steps);
     this.platform.vibrateLight();
+    const level = chapterOneLevels[this.levelIndex];
+    const optimalMoves = level.par
+      ?? level.solution?.filter((action) => action !== 'switch-cube').length
+      ?? result.current.steps;
+    const rating = calculateStarRating(optimalMoves, result.current.steps);
     const nextIndex = Math.min(this.levelIndex + 1, chapterOneLevels.length - 1);
     this.saveData = withUnlockedLevel(this.saveData, nextIndex, chapterOneLevels);
+    this.saveData = withBestStarRating(this.saveData, level.id, rating);
     this.saveData = {
       ...this.saveData,
       currentRun: this.levelIndex + 1 < chapterOneLevels.length
@@ -582,9 +600,13 @@ export class GameplayController extends Component {
     if (this.completionStatsLabel) {
       this.completionStatsLabel.string = translate(this.saveData.language, 'completionStats', {
         moves: result.current.steps,
+        optimal: optimalMoves,
         time: this.formattedTime(),
-        passcode: chapterOneLevels[this.levelIndex].passcode,
+        passcode: level.passcode,
       });
+    }
+    if (this.completionStarsLabel) {
+      this.completionStarsLabel.string = this.starText(rating);
     }
     if (this.completionContinueLabel) {
       this.completionContinueLabel.string = this.levelIndex + 1 < chapterOneLevels.length
@@ -706,6 +728,13 @@ export class GameplayController extends Component {
       if (label) {
         label.string = unlocked ? this.twoDigits(index + 1) : '--';
       }
+      const stars = this.stageStarLabels[index];
+      if (stars) {
+        const rating = unlocked
+          ? getBestStarRating(this.saveData, chapterOneLevels[index].id)
+          : 0;
+        stars.string = rating > 0 ? this.starText(rating) : '';
+      }
     });
   }
 
@@ -813,5 +842,9 @@ export class GameplayController extends Component {
 
   private twoDigits(value: number): string {
     return value < 10 ? `0${value}` : String(value);
+  }
+
+  private starText(rating: number): string {
+    return ['☆☆☆', '★☆☆', '★★☆', '★★★'][rating] ?? '☆☆☆';
   }
 }

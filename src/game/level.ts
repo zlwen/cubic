@@ -60,6 +60,7 @@ export class LevelMap {
   }
 
   private supportsCell(coord: GridCoord, bridgeStates: PuzzleState['bridgeStates']): boolean {
+    if (coordKey(coord) === coordKey(this.definition.goal)) return true;
     if (this.hasStaticTile(coord)) return true;
     const bridgeId = this.bridgeIdByCoord.get(coordKey(coord));
     return bridgeId ? bridgeStates[bridgeId] === true : false;
@@ -74,7 +75,9 @@ export function validateLevel(level: LevelDefinition): LevelValidationResult {
   if (!level.id.trim()) errors.push('Level id is required.');
   if (!level.title.trim()) errors.push('Level title is required.');
   if (!level.author.trim()) errors.push('Level author is required.');
-  if (level.original !== true) errors.push('Level must be marked as original content.');
+  if (!level.original && !level.source?.trim()) {
+    errors.push('Adapted level content must include its source.');
+  }
   if (level.tiles.length === 0) errors.push('Level must contain at least one tile.');
 
   for (const tile of level.tiles) {

@@ -53,7 +53,8 @@ export interface LevelDefinition {
   readonly title: string;
   readonly passcode: string;
   readonly author: string;
-  readonly original: true;
+  readonly original: boolean;
+  readonly source?: string;
   readonly tiles: readonly TileDefinition[];
   readonly bridges?: readonly BridgeDefinition[];
   readonly switches?: readonly SwitchDefinition[];

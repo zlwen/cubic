@@ -7,6 +7,9 @@ import {
   MeshRenderer,
   Node,
   primitives,
+  Quat,
+  tween,
+  Tween,
   utils,
   Vec3,
 } from 'cc';
@@ -27,6 +30,9 @@ export class BoardRenderer extends Component {
 
   private spawnedTiles: Node[] = [];
   private readonly bridgeNodes = new Map<string, Node[]>();
+  private readonly fragileNodes = new Map<string, Node>();
+  private readonly breakEffectNodes = new Set<Node>();
+  private readonly breakTweenTargets = new Set<object>();
   private readonly materials = new Map<string, Material>();
 
   render(level: LevelDefinition): void {
@@ -36,6 +42,7 @@ export class BoardRenderer extends Component {
       tileNode.setParent(this.node);
       tileNode.setPosition(new Vec3(tile.x * this.tileSize, 0, tile.z * this.tileSize));
       this.spawnedTiles.push(tileNode);
+      if (tile.type === 'fragile') this.fragileNodes.set(this.tileKey(tile.x, tile.z), tileNode);
     }
     for (const bridge of level.bridges ?? []) {
       const nodes: Node[] = [];
@@ -62,10 +69,43 @@ export class BoardRenderer extends Component {
     }
   }
 
+  playFragileBreak(coord: { x: number; z: number }): void {
+    const tile = this.fragileNodes.get(this.tileKey(coord.x, coord.z));
+    if (!tile?.active) return;
+    tile.active = false;
+
+    for (let index = 0; index < 9; index += 1) {
+      const column = index % 3;
+      const row = Math.floor(index / 3);
+      const offsetX = (column - 1) * 0.29;
+      const offsetZ = (row - 1) * 0.29;
+      const width = 0.22 + (index % 2) * 0.05;
+      const depth = 0.21 + ((index + 1) % 3) * 0.025;
+      const shard = this.addBox(
+        this.node,
+        `GlassShard${index + 1}`,
+        new Vec3(width, 0.04, depth),
+        new Vec3(tile.position.x + offsetX, 0.12, tile.position.z + offsetZ),
+        new Color(183, 226, 235, 145),
+        this.getLitMaterial(new Color(183, 226, 235, 145), 0.14),
+      );
+      shard.setRotationFromEuler(0, index * 19, 0);
+      const renderer = shard.getComponent(MeshRenderer);
+      if (renderer) renderer.shadowCastingMode = MeshRenderer.ShadowCastingMode.ON;
+      this.breakEffectNodes.add(shard);
+      this.animateGlassShard(shard, index, offsetX, offsetZ);
+    }
+  }
+
   clear(): void {
+    for (const target of this.breakTweenTargets) Tween.stopAllByTarget(target);
+    this.breakTweenTargets.clear();
+    for (const effect of this.breakEffectNodes) effect.destroy();
+    this.breakEffectNodes.clear();
     for (const tile of this.spawnedTiles) tile.destroy();
     this.spawnedTiles = [];
     this.bridgeNodes.clear();
+    this.fragileNodes.clear();
   }
 
   private createTile(tile: TileDefinition): Node {
@@ -73,15 +113,9 @@ export class BoardRenderer extends Component {
     tileNode.name = `tile-${tile.x}-${tile.z}`;
     if (!this.tilePrefab) {
       const sideColor = tile.type === 'fragile'
-        ? new Color(86, 133, 151, 145)
-        : tile.type === 'split'
-          ? new Color(107, 105, 139, 255)
-          : tile.type === 'soft-switch'
-            ? new Color(70, 112, 105, 255)
-            : tile.type === 'hard-switch'
-              ? new Color(125, 94, 41, 255)
-              : new Color(157, 162, 172, 255);
-      this.addBase(tileNode, sideColor);
+        ? new Color(112, 172, 187, 92)
+        : new Color(157, 162, 172, 255);
+      this.addBase(tileNode, sideColor, tile.type === 'fragile' ? 0.18 : 0.88);
       this.createTileTop(tileNode, tile);
     }
     return tileNode;
@@ -89,21 +123,19 @@ export class BoardRenderer extends Component {
 
   private createTileTop(tileNode: Node, tile: TileDefinition): void {
     if (tile.type === 'fragile') {
-      this.addBox(tileNode, 'FragileTop', new Vec3(0.984, 0.035, 0.984), new Vec3(0, 0.105, 0), new Color(176, 217, 226, 155));
-      const first = this.addBox(tileNode, 'CrackA', new Vec3(0.72, 0.026, 0.055), new Vec3(0, 0.145, 0), new Color(39, 69, 79, 255));
-      const second = this.addBox(tileNode, 'CrackB', new Vec3(0.72, 0.026, 0.055), new Vec3(0, 0.146, 0), new Color(39, 69, 79, 255));
-      first.setRotationFromEuler(0, 45, 0);
-      second.setRotationFromEuler(0, -45, 0);
+      const glassColor = new Color(184, 226, 234, 112);
+      const edgeColor = new Color(218, 244, 248, 185);
+      const glassMaterial = this.getLitMaterial(glassColor, 0.12);
+      const edgeMaterial = this.getLitMaterial(edgeColor, 0.16);
+      this.addBox(tileNode, 'GlassTop', new Vec3(0.984, 0.035, 0.984), new Vec3(0, 0.105, 0), glassColor, glassMaterial);
+      this.addBox(tileNode, 'GlassEdgeNorth', new Vec3(0.94, 0.025, 0.025), new Vec3(0, 0.135, -0.47), edgeColor, edgeMaterial);
+      this.addBox(tileNode, 'GlassEdgeSouth', new Vec3(0.94, 0.025, 0.025), new Vec3(0, 0.135, 0.47), edgeColor, edgeMaterial);
+      this.addBox(tileNode, 'GlassEdgeWest', new Vec3(0.025, 0.025, 0.94), new Vec3(-0.47, 0.135, 0), edgeColor, edgeMaterial);
+      this.addBox(tileNode, 'GlassEdgeEast', new Vec3(0.025, 0.025, 0.94), new Vec3(0.47, 0.135, 0), edgeColor, edgeMaterial);
       return;
     }
 
-    const topColor = tile.type === 'split'
-      ? new Color(145, 142, 181, 255)
-      : tile.type === 'soft-switch'
-        ? new Color(154, 202, 193, 255)
-        : tile.type === 'hard-switch'
-          ? new Color(218, 185, 105, 255)
-          : new Color(238, 239, 242, 255);
+    const topColor = new Color(238, 239, 242, 255);
     this.addBox(
       tileNode,
       'StoneTop',
@@ -113,15 +145,16 @@ export class BoardRenderer extends Component {
     );
 
     if (tile.type === 'soft-switch') {
-      this.addCylinder(tileNode, 'SoftSwitch', 0.24, 0.07, new Vec3(0, 0.165, 0), new Color(32, 78, 72, 255));
+      this.addCylinder(tileNode, 'SoftSwitchOuter', 0.24, 0.045, new Vec3(0, 0.15, 0), new Color(39, 127, 114, 255));
+      this.addCylinder(tileNode, 'SoftSwitchInner', 0.15, 0.05, new Vec3(0, 0.17, 0), topColor);
     } else if (tile.type === 'hard-switch') {
-      const first = this.addBox(tileNode, 'HardSwitchA', new Vec3(0.58, 0.045, 0.1), new Vec3(0, 0.16, 0), new Color(91, 58, 15, 255));
-      const second = this.addBox(tileNode, 'HardSwitchB', new Vec3(0.58, 0.045, 0.1), new Vec3(0, 0.162, 0), new Color(91, 58, 15, 255));
+      const first = this.addBox(tileNode, 'HardSwitchA', new Vec3(0.58, 0.045, 0.1), new Vec3(0, 0.16, 0), new Color(173, 94, 35, 255));
+      const second = this.addBox(tileNode, 'HardSwitchB', new Vec3(0.58, 0.045, 0.1), new Vec3(0, 0.162, 0), new Color(173, 94, 35, 255));
       first.setRotationFromEuler(0, 45, 0);
       second.setRotationFromEuler(0, -45, 0);
     } else if (tile.type === 'split') {
       for (const [x, z] of [[-0.22, -0.22], [0.22, -0.22], [-0.22, 0.22], [0.22, 0.22]]) {
-        this.addBox(tileNode, 'SplitMarker', new Vec3(0.12, 0.025, 0.12), new Vec3(x, 0.145, z), new Color(224, 224, 235, 255));
+        this.addBox(tileNode, 'SplitMarker', new Vec3(0.12, 0.025, 0.12), new Vec3(x, 0.145, z), new Color(102, 91, 158, 255));
       }
     }
   }
@@ -133,10 +166,10 @@ export class BoardRenderer extends Component {
     return node;
   }
 
-  private addBase(parent: Node, color: Color): void {
+  private addBase(parent: Node, color: Color, roughness = 0.88): void {
     const renderer = parent.addComponent(MeshRenderer);
     renderer.mesh = utils.createMesh(primitives.box({ width: 1, height: 0.2, length: 1 }));
-    renderer.setMaterial(this.getLitMaterial(color), 0);
+    renderer.setMaterial(this.getLitMaterial(color, roughness), 0);
     this.configureShadowReceiver(renderer);
   }
 
@@ -192,8 +225,8 @@ export class BoardRenderer extends Component {
     return node;
   }
 
-  private getLitMaterial(color: Color): Material {
-    const key = `${color.r}-${color.g}-${color.b}-${color.a}`;
+  private getLitMaterial(color: Color, roughness = 0.88): Material {
+    const key = `${color.r}-${color.g}-${color.b}-${color.a}-${roughness}`;
     const existing = this.materials.get(key);
     if (existing) return existing;
     const baseMaterial = this.litBaseMaterial;
@@ -201,10 +234,58 @@ export class BoardRenderer extends Component {
     const material = new Material();
     material.copy(baseMaterial, { technique: color.a < 255 ? 1 : 0 });
     material.setProperty('mainColor', color);
-    material.setProperty('roughness', 0.88);
+    material.setProperty('roughness', roughness);
     material.setProperty('metallic', 0);
     this.materials.set(key, material);
     return material;
+  }
+
+  private animateGlassShard(
+    shard: Node,
+    index: number,
+    offsetX: number,
+    offsetZ: number,
+  ): void {
+    const start = shard.position.clone();
+    const radialX = offsetX * 1.25 + ((index % 2 === 0 ? 1 : -1) * 0.08);
+    const radialZ = offsetZ * 1.25 + ((index % 3 === 0 ? -1 : 1) * 0.07);
+    const lift = 0.22 + (index % 3) * 0.055;
+    const progress = { value: 0 };
+    const position = new Vec3();
+    const rotation = new Quat();
+    this.breakTweenTargets.add(progress);
+    tween(progress)
+      .to(0.58, { value: 1 }, {
+        easing: 'linear',
+        onUpdate: () => {
+          const phase = progress.value;
+          position.set(
+            start.x + radialX * phase,
+            start.y + lift * Math.sin(Math.PI * phase) - 1.75 * phase * phase,
+            start.z + radialZ * phase,
+          );
+          shard.setPosition(position);
+          Quat.fromEuler(
+            rotation,
+            (index + 2) * 83 * phase,
+            index * 19 + (index + 1) * 61 * phase,
+            (index + 1) * 47 * phase,
+          );
+          shard.setRotation(rotation);
+          const scale = phase < 0.72 ? 1 : Math.max(0, 1 - (phase - 0.72) / 0.28);
+          shard.setScale(scale, scale, scale);
+        },
+      })
+      .call(() => {
+        this.breakTweenTargets.delete(progress);
+        this.breakEffectNodes.delete(shard);
+        shard.destroy();
+      })
+      .start();
+  }
+
+  private tileKey(x: number, z: number): string {
+    return `${x},${z}`;
   }
 
   private configureShadowReceiver(renderer: MeshRenderer): void {

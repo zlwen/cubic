@@ -1,12 +1,12 @@
-# Content Originality
+# Content Provenance
 
-This project is an original rolling-block puzzle inspired by a known interaction pattern. It must not copy Bloxorz branding, names, levels, art, audio, UI, or protected presentation.
+The project-authored visuals, audio, UI, localization, and application code are kept separate from imported campaign data.
 
-First playable content rules:
+Campaign provenance:
 
-- Level names are original.
-- Level layouts are authored for this project.
-- Visual style uses original materials and composition.
-- Any future references to external games stay in planning notes only, not in player-facing assets or store copy.
+- The 33 level layouts and six-digit passcodes come from `jacobcoughenour/bloxorz_gba/game/levels.json` at commit `8d552f867c06caa8bc9953eefa13ecb2bb9d8edf`.
+- The imported data is licensed under MIT; see `third_party/bloxorz_gba/LICENSE` and `THIRD_PARTY_NOTICES.md`.
+- No upstream sprites, textures, audio, or source code are included in the runtime assets.
+- CUBIC keeps its own name, 3D presentation, controls, menus, copy, and generated audiovisual assets.
 
-`src/levels/index.ts` includes a basic content audit that rejects protected source branding in first playable level titles and verifies every tutorial level has a documented solution.
+`src/levels/index.ts` validates the converted campaign, and the engine tests compare every imported grid cell, switch action, split destination, passcode, and verified solution.

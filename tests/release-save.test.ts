@@ -1,7 +1,9 @@
 import {
+  calculateStarRating,
   createDefaultReleaseSave,
   decodeReleaseSave,
   getHighestUnlockedIndex,
+  getBestStarRating,
   hasCompleteLocalizationCatalogs,
   languageFromLocale,
   nextGameLanguage,
@@ -14,6 +16,7 @@ import {
   serializeReleaseSave,
   translate,
   withUnlockedLevel,
+  withBestStarRating,
 } from '../src/game/index';
 import type { LevelDefinition, PuzzleAction, PuzzleState, ReleaseSaveData } from '../src/game/index';
 import { chapterOneLevels } from '../src/levels/index';
@@ -124,6 +127,35 @@ function testUnlockProgressionIsMonotonic() {
   check.equal(withUnlockedLevel(unlocked, 2, chapterOneLevels), unlocked);
 }
 
+function testStarRatingAndBestResultPersistence() {
+  check.equal(calculateStarRating(10, 10), 3);
+  check.equal(calculateStarRating(10, 13), 2);
+  check.equal(calculateStarRating(10, 14), 1);
+  check.equal(calculateStarRating(7, 9), 2);
+  check.equal(calculateStarRating(7, 10), 1);
+
+  const level = chapterOneLevels[0];
+  const defaults = createDefaultReleaseSave(chapterOneLevels);
+  check.equal(getBestStarRating(defaults, level.id), 0);
+  const twoStars = withBestStarRating(defaults, level.id, 2);
+  check.equal(getBestStarRating(twoStars, level.id), 2);
+  check.equal(withBestStarRating(twoStars, level.id, 1), twoStars);
+  const threeStars = withBestStarRating(twoStars, level.id, 3);
+  check.equal(getBestStarRating(threeStars, level.id), 3);
+
+  const decoded = decodeReleaseSave(serializeReleaseSave(threeStars), chapterOneLevels);
+  check.equal(getBestStarRating(decoded, level.id), 3);
+  const normalized = normalizeReleaseSave({
+    ...threeStars,
+    bestStarsByLevel: {
+      [level.id]: 2,
+      [chapterOneLevels[1].id]: 4,
+      unknown: 3,
+    },
+  }, chapterOneLevels);
+  check.deepEqual(normalized.bestStarsByLevel, { [level.id]: 2 });
+}
+
 function testContextualOnboardingSelection() {
   const firstTopics = pendingOnboardingTopics(chapterOneLevels[0], []);
   check.deepEqual(firstTopics.map((topic) => topic.id), ['movement', 'goal']);
@@ -131,9 +163,14 @@ function testContextualOnboardingSelection() {
   const bridgeLevel = chapterOneLevels.find((level) =>
     level.tiles.some((tile) => tile.type === 'soft-switch') && (level.bridges?.length ?? 0) > 0);
   if (!bridgeLevel) throw new Error('Campaign must contain a soft-switch bridge level.');
+  const expectedBridgeTopics = ['soft-switch'];
+  if (bridgeLevel.tiles.some((tile) => tile.type === 'hard-switch')) {
+    expectedBridgeTopics.push('hard-switch');
+  }
+  expectedBridgeTopics.push('bridge');
   check.deepEqual(
     pendingOnboardingTopics(bridgeLevel, ['movement', 'goal']).map((topic) => topic.id),
-    ['soft-switch', 'bridge'],
+    expectedBridgeTopics,
   );
 
   const splitLevel = chapterOneLevels.find((level) => (level.splits?.length ?? 0) > 0);
@@ -152,6 +189,7 @@ function testNewGamePreservesPreferencesAndTutorials() {
     currentRun: { levelId: chapterOneLevels[8].id, actions: [], elapsedSeconds: 42 },
     soundEnabled: false,
     acknowledgedTutorials: ['movement', 'goal', 'fragile'],
+    bestStarsByLevel: { [chapterOneLevels[0].id]: 3 },
   };
   const reset = resetCampaignProgress(progressed, chapterOneLevels);
   check.equal(reset.currentRun, null);
@@ -159,6 +197,7 @@ function testNewGamePreservesPreferencesAndTutorials() {
   check.equal(reset.soundEnabled, false);
   check.equal(reset.language, progressed.language);
   check.deepEqual(reset.acknowledgedTutorials, progressed.acknowledgedTutorials);
+  check.deepEqual(reset.bestStarsByLevel, {});
 }
 
 function testLanguageSelectionAndCatalogs() {
@@ -209,6 +248,7 @@ testBasicResumeRoundTrip();
 testBridgeAndSplitResume();
 testMalformedAndUnsupportedSaveRecovery();
 testUnlockProgressionIsMonotonic();
+testStarRatingAndBestResultPersistence();
 testContextualOnboardingSelection();
 testNewGamePreservesPreferencesAndTutorials();
 testLanguageSelectionAndCatalogs();

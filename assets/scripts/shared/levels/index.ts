@@ -8,8 +8,8 @@ export function getLevelById(id: string) {
 }
 
 export function getLevelIndexByPasscode(input: string): number {
-  const normalized = input.trim().toUpperCase();
-  if (!/^[A-Z]{4}$/.test(normalized)) {
+  const normalized = input.trim();
+  if (!/^\d{6}$/.test(normalized)) {
     return -1;
   }
   return chapterOneLevels.findIndex((level) => level.passcode === normalized);
@@ -20,7 +20,6 @@ export function validateTutorialContent(): string[] {
   const seenIds = new Set<string>();
   const seenTitles = new Set<string>();
   const seenPasscodes = new Set<string>();
-  const disallowedTerms = ['bloxorz'];
 
   if (chapterOneLevels.length !== 33) {
     errors.push(`The campaign must contain 33 levels, found ${chapterOneLevels.length}.`);
@@ -37,8 +36,8 @@ export function validateTutorialContent(): string[] {
     }
     seenTitles.add(level.title);
 
-    if (!/^[A-Z]{4}$/.test(level.passcode)) {
-      errors.push(`${level.id}: passcode must contain exactly four uppercase ASCII letters.`);
+    if (!/^\d{6}$/.test(level.passcode)) {
+      errors.push(`${level.id}: passcode must contain exactly six digits.`);
     } else if (seenPasscodes.has(level.passcode)) {
       errors.push(`${level.id}: duplicate passcode: ${level.passcode}`);
     }
@@ -46,13 +45,6 @@ export function validateTutorialContent(): string[] {
 
     const validation = validateLevel(level);
     errors.push(...validation.errors.map((error) => `${level.id}: ${error}`));
-
-    const title = level.title.toLowerCase();
-    for (const term of disallowedTerms) {
-      if (title.includes(term)) {
-        errors.push(`${level.id}: title must not include protected source branding.`);
-      }
-    }
 
     if (!level.solution || level.solution.length === 0) {
       errors.push(`${level.id}: solution is required for first playable verification.`);
@@ -79,7 +71,7 @@ export function validateTutorialContent(): string[] {
     const zs = boardCells.map((cell) => cell.z);
     const width = Math.max(...xs) - Math.min(...xs) + 1;
     const depth = Math.max(...zs) - Math.min(...zs) + 1;
-    if (width > 13 || depth > 13) {
+    if (width > 15 || depth > 10) {
       errors.push(`${level.id}: board bounds exceed the mobile campaign limit.`);
     }
 
