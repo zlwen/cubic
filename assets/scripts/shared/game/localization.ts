@@ -161,28 +161,28 @@ const onboardingCatalogs: Record<GameLanguage, Record<TutorialTopicId, Onboardin
     },
     fragile: {
       title: 'FRAGILE TILE',
-      symbol: 'GLASS\n  X',
+      symbol: '◇\nGLASS',
       body: 'You may cross this translucent tile while lying down. Standing upright on it will break it.',
     },
     'soft-switch': {
       title: 'SOFT SWITCH',
-      symbol: 'ROUND\nPRESS',
+      symbol: 'O',
       body: 'Any part of the whole block or either split cube can press it. A switch may open, close, or toggle its linked bridges.',
     },
     'hard-switch': {
       title: 'HARD SWITCH',
-      symbol: 'STAND\n  X',
+      symbol: 'X',
       body: 'An X-marked hard switch responds only when the unsplit whole block stands upright on it.',
     },
     bridge: {
       title: 'CONTROLLED BRIDGE',
-      symbol: 'ON  /  OFF',
+      symbol: '▰\n⇅\n▱',
       body: 'Switches can enable, disable, or toggle connected bridge spans. Check the route after every press.',
     },
     split: {
       title: 'SPLIT TILE',
-      symbol: 'ONE\n2\nTWO',
-      body: 'Stand upright on the four-mark tile to divide the block into two independently positioned cubes.',
+      symbol: '◀│▶',
+      body: 'Stand upright on the split tile to divide the block into two independently positioned cubes.',
     },
     'switch-cube': {
       title: 'SWITCH ACTIVE CUBE',
@@ -208,28 +208,28 @@ const onboardingCatalogs: Record<GameLanguage, Record<TutorialTopicId, Onboardin
     },
     fragile: {
       title: '易碎地砖',
-      symbol: '玻璃\n X',
+      symbol: '◇\n玻璃',
       body: '方块平躺时可以经过透明地砖；直立在上面会将其压碎。',
     },
     'soft-switch': {
       title: '轻触机关',
-      symbol: '圆形\n按压',
+      symbol: 'O',
       body: '完整方块的任一部分或分裂后的小方块都能按下圆形机关；不同机关会开启、关闭或切换相连的桥梁。',
     },
     'hard-switch': {
       title: '重压机关',
-      symbol: '直立\n X',
+      symbol: 'X',
       body: '带 X 标记的机关只会在完整方块直立压上去时触发。',
     },
     bridge: {
       title: '可控桥梁',
-      symbol: '开 / 关',
+      symbol: '▰\n⇅\n▱',
       body: '机关可以开启、关闭或切换相连的桥梁。每次触发后都要重新观察路线。',
     },
     split: {
       title: '分裂地砖',
-      symbol: '一体\n 2\n两块',
-      body: '完整方块直立在四点标记上时，会分裂成两个可独立移动的小方块。',
+      symbol: '◀│▶',
+      body: '完整方块直立在分裂地砖上时，会分裂成两个可独立移动的小方块。',
     },
     'switch-cube': {
       title: '切换活动方块',
@@ -255,28 +255,28 @@ const onboardingCatalogs: Record<GameLanguage, Record<TutorialTopicId, Onboardin
     },
     fragile: {
       title: '易碎地磚',
-      symbol: '玻璃\n X',
+      symbol: '◇\n玻璃',
       body: '方塊平躺時可以經過透明地磚；直立在上面會將其壓碎。',
     },
     'soft-switch': {
       title: '輕觸機關',
-      symbol: '圓形\n按壓',
+      symbol: 'O',
       body: '完整方塊的任一部分或分裂後的小方塊都能按下圓形機關；不同機關會開啟、關閉或切換相連的橋梁。',
     },
     'hard-switch': {
       title: '重壓機關',
-      symbol: '直立\n X',
+      symbol: 'X',
       body: '帶 X 標記的機關只會在完整方塊直立壓上去時觸發。',
     },
     bridge: {
       title: '可控橋梁',
-      symbol: '開 / 關',
+      symbol: '▰\n⇅\n▱',
       body: '機關可以開啟、關閉或切換相連的橋梁。每次觸發後都要重新觀察路線。',
     },
     split: {
       title: '分裂地磚',
-      symbol: '一體\n 2\n兩塊',
-      body: '完整方塊直立在四點標記上時，會分裂成兩個可獨立移動的小方塊。',
+      symbol: '◀│▶',
+      body: '完整方塊直立在分裂地磚上時，會分裂成兩個可獨立移動的小方塊。',
     },
     'switch-cube': {
       title: '切換活動方塊',

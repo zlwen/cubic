@@ -189,6 +189,7 @@ export function resetCampaignProgress(
     ...save,
     currentRun: null,
     highestUnlockedLevelId: levels[0].id,
+    acknowledgedTutorials: [],
     bestStarsByLevel: {},
   };
 }

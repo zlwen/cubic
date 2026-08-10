@@ -24,32 +24,32 @@ export const onboardingTopics: readonly OnboardingTopic[] = [
   {
     id: 'fragile',
     title: 'FRAGILE TILE',
-    symbol: 'GLASS\n  X',
+    symbol: '◇\nGLASS',
     body: 'You may cross this translucent tile while lying down. Standing upright on it will break it.',
   },
   {
     id: 'soft-switch',
     title: 'SOFT SWITCH',
-    symbol: 'ROUND\nPRESS',
+    symbol: 'O',
     body: 'Any part of the whole block or either split cube can press it. A switch may open, close, or toggle its linked bridges.',
   },
   {
     id: 'hard-switch',
     title: 'HARD SWITCH',
-    symbol: 'STAND\n  X',
+    symbol: 'X',
     body: 'An X-marked hard switch responds only when the unsplit whole block stands upright on it.',
   },
   {
     id: 'bridge',
     title: 'CONTROLLED BRIDGE',
-    symbol: 'ON  /  OFF',
+    symbol: '▰\n⇅\n▱',
     body: 'Switches can enable, disable, or toggle connected bridge spans. Check the route after every press.',
   },
   {
     id: 'split',
     title: 'SPLIT TILE',
-    symbol: 'ONE\n2\nTWO',
-    body: 'Stand upright on the four-mark tile to divide the block into two independently positioned cubes.',
+    symbol: '◀│▶',
+    body: 'Stand upright on the split tile to divide the block into two independently positioned cubes.',
   },
   {
     id: 'switch-cube',

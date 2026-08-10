@@ -183,7 +183,7 @@ function testContextualOnboardingSelection() {
   );
 }
 
-function testNewGamePreservesPreferencesAndTutorials() {
+function testNewGamePreservesPreferencesAndRestartsTutorials() {
   const progressed: ReleaseSaveData = {
     ...withUnlockedLevel(createDefaultReleaseSave(chapterOneLevels), 8, chapterOneLevels),
     currentRun: { levelId: chapterOneLevels[8].id, actions: [], elapsedSeconds: 42 },
@@ -196,8 +196,31 @@ function testNewGamePreservesPreferencesAndTutorials() {
   check.equal(getHighestUnlockedIndex(reset, chapterOneLevels), 0);
   check.equal(reset.soundEnabled, false);
   check.equal(reset.language, progressed.language);
-  check.deepEqual(reset.acknowledgedTutorials, progressed.acknowledgedTutorials);
+  check.deepEqual(reset.acknowledgedTutorials, []);
   check.deepEqual(reset.bestStarsByLevel, {});
+}
+
+function testTutorialsFollowFeatureIntroduction() {
+  const firstStageByTopic = new Map<string, number>();
+  const acknowledged: Array<ReleaseSaveData['acknowledgedTutorials'][number]> = [];
+  for (const [index, level] of chapterOneLevels.entries()) {
+    const pending = pendingOnboardingTopics(level, acknowledged);
+    for (const topic of pending) {
+      firstStageByTopic.set(topic.id, index + 1);
+      acknowledged.push(topic.id);
+    }
+  }
+  check.deepEqual(Object.fromEntries(firstStageByTopic), {
+    movement: 1,
+    goal: 1,
+    'soft-switch': 2,
+    'hard-switch': 2,
+    bridge: 2,
+    fragile: 4,
+    split: 8,
+    'switch-cube': 8,
+    recombine: 8,
+  });
 }
 
 function testLanguageSelectionAndCatalogs() {
@@ -250,7 +273,8 @@ testMalformedAndUnsupportedSaveRecovery();
 testUnlockProgressionIsMonotonic();
 testStarRatingAndBestResultPersistence();
 testContextualOnboardingSelection();
-testNewGamePreservesPreferencesAndTutorials();
+testNewGamePreservesPreferencesAndRestartsTutorials();
+testTutorialsFollowFeatureIntroduction();
 testLanguageSelectionAndCatalogs();
 testLanguageSaveCompatibility();
 

@@ -694,7 +694,7 @@ export class GameplayController extends Component {
     if (!topic) return;
     const copy = getLocalizedOnboardingCopy(this.saveData.language, topic.id);
     if (this.tutorialTitleLabel) this.tutorialTitleLabel.string = copy.title;
-    if (this.tutorialSymbolLabel) this.tutorialSymbolLabel.string = copy.symbol;
+    if (this.tutorialSymbolLabel) this.updateTopicSymbol(this.tutorialSymbolLabel, topic, copy.symbol);
     if (this.tutorialBodyLabel) this.tutorialBodyLabel.string = copy.body;
     if (this.tutorialProgressLabel) {
       const position = this.tutorialTotal - this.tutorialQueue.length + 1;
@@ -712,10 +712,30 @@ export class GameplayController extends Component {
     if (!topic) return;
     const copy = getLocalizedOnboardingCopy(this.saveData.language, topic.id);
     if (this.howTopicTitleLabel) this.howTopicTitleLabel.string = copy.title;
-    if (this.howTopicSymbolLabel) this.howTopicSymbolLabel.string = copy.symbol;
+    if (this.howTopicSymbolLabel) this.updateTopicSymbol(this.howTopicSymbolLabel, topic, copy.symbol);
     if (this.howTopicBodyLabel) this.howTopicBodyLabel.string = copy.body;
     if (this.howTopicProgressLabel) {
       this.howTopicProgressLabel.string = `${this.howTopicIndex + 1} / ${onboardingTopics.length}`;
+    }
+  }
+
+  private updateTopicSymbol(label: Label, topic: OnboardingTopic, symbol: string): void {
+    label.string = symbol;
+    if (topic.id === 'soft-switch' || topic.id === 'hard-switch') {
+      label.fontSize = 42;
+      label.lineHeight = 46;
+    } else if (topic.id === 'split') {
+      label.fontSize = 28;
+      label.lineHeight = 34;
+    } else if (topic.id === 'fragile') {
+      label.fontSize = 20;
+      label.lineHeight = 28;
+    } else if (topic.id === 'bridge') {
+      label.fontSize = 21;
+      label.lineHeight = 24;
+    } else {
+      label.fontSize = 14;
+      label.lineHeight = 18;
     }
   }
 
