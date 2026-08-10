@@ -159,6 +159,15 @@ function testTutorialLevels() {
   assert.equal(new Set(chapterOneLevels.map((level) => level.passcode)).size, chapterOneLevels.length);
 
   for (const level of chapterOneLevels) {
+    for (const switchDefinition of level.switches ?? []) {
+      const tile = level.tiles.find((candidate) =>
+        candidate.x === switchDefinition.x && candidate.z === switchDefinition.z);
+      if (tile?.type === 'soft-switch') {
+        for (const action of switchDefinition.actions) {
+          assert.equal(action.mode, 'toggle', `${level.id} soft switches should toggle their bridges.`);
+        }
+      }
+    }
     const moveCount = level.solution?.filter((action) => action !== 'switch-cube').length;
     assert.equal(level.par, moveCount, `${level.id} par should match its reviewed solution`);
     const engine = new PuzzleEngine(level);
@@ -286,7 +295,7 @@ function switchBridgeLevel(type: 'soft-switch' | 'hard-switch'): LevelDefinition
     switches: [{
       x: 1,
       z: 0,
-      actions: [{ bridgeId: 'gate', mode: 'enable' }],
+      actions: [{ bridgeId: 'gate', mode: type === 'soft-switch' ? 'toggle' : 'enable' }],
     }],
   };
 }
@@ -295,7 +304,10 @@ function testSwitchAndBridgeRules() {
   const softEngine = new PuzzleEngine(switchBridgeLevel('soft-switch'));
   softEngine.move('right');
   assert.equal(softEngine.getState().bridgeStates.gate, true);
-  assert.equal(softEngine.move('right').status, 'moved');
+  softEngine.move('left');
+  softEngine.move('right');
+  assert.equal(softEngine.getState().bridgeStates.gate, false, 'A soft switch should toggle its bridge off when pressed again.');
+  assert.equal(softEngine.undo().bridgeStates.gate, true, 'Undo should restore the bridge state before the second press.');
   const restarted = softEngine.restart();
   assert.equal(restarted.bridgeStates.gate, false);
 

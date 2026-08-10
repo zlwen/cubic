@@ -217,7 +217,10 @@ function buildLevel(
     bridges.push({ id: bridgeId, cells: bridgeCells, initiallyActive: false });
     switches.push({
       ...cloneCoord(switchCell),
-      actions: [{ bridgeId, mode: gate.mode ?? 'enable' }],
+      actions: [{
+        bridgeId,
+        mode: gate.mode ?? (gate.type === 'soft-switch' ? 'toggle' : 'enable'),
+      }],
     });
   }
 
@@ -258,6 +261,17 @@ function buildLevel(
     bridges: bridges.length > 0 ? bridges : undefined,
     switches: switches.length > 0 ? switches : undefined,
     splits: splitDefinition ? [splitDefinition] : undefined,
+    solution,
+    par: solution.filter((action) => action !== 'switch-cube').length,
+  };
+}
+
+function withSolution(
+  level: LevelDefinition,
+  solution: readonly PuzzleAction[],
+): LevelDefinition {
+  return {
+    ...level,
     solution,
     par: solution.filter((action) => action !== 'switch-cube').length,
   };
@@ -456,9 +470,20 @@ const lateWholeBlueprints: typeof wholeBlueprints = [
   { meta: { id: 'divided-works', title: 'Divided Works', passcode: 'DWRK' }, route: ['right', 'right', 'left', 'left', 'up', 'up', 'down', 'down', 'left', 'left', 'right', 'right', 'down', 'down', 'up', 'up', ...standingRouteG, ...standingRouteB], mechanics: { fragileCount: 8, gates: [{ type: 'hard-switch', bridgeCellCount: 3, switchFrame: 2 }, { type: 'hard-switch', bridgeCellCount: 3, switchFrame: 6 }, { type: 'hard-switch', bridgeCellCount: 2, switchFrame: 10 }, { type: 'hard-switch', bridgeCellCount: 2, switchFrame: 14 }] } },
 ];
 
+const lockedArcToggleSolution: readonly PuzzleAction[] = [
+  'left', 'left', 'up', 'right', 'down', 'up', 'down',
+  'left', 'down', 'left', 'down', 'down', 'left', 'left',
+];
+
+const lastFoundryToggleSolution: readonly PuzzleAction[] = [
+  'right', 'right', 'up', 'left', 'left', 'down', 'left', 'left', 'left', 'up',
+  'switch-cube', 'up', 'up', 'up', 'up', 'left', 'left', 'down', 'left', 'left', 'left', 'left', 'up',
+];
+
 const openingLevels = wholeBlueprints.map((blueprint) => {
   const frames = wholeTrace(blueprint.route);
-  return buildLevel(blueprint.meta, frames, blueprint.route, blueprint.mechanics);
+  const level = buildLevel(blueprint.meta, frames, blueprint.route, blueprint.mechanics);
+  return level.id === 'locked-arc' ? withSolution(level, lockedArcToggleSolution) : level;
 });
 
 function mechanicsForSplitLevel(index: number): MechanicPlan {
@@ -515,11 +540,14 @@ const fractureGrid = buildLateSplitLevel(
   { fragileCount: 8, gates: [{ type: 'hard-switch', bridgeCellCount: 3 }, { type: 'soft-switch', bridgeCellCount: 2 }, { type: 'hard-switch', bridgeCellCount: 3 }] },
 );
 
-const lastFoundry = buildLateSplitLevel(
-  { id: 'last-foundry', title: 'Last Foundry', passcode: 'LAST' },
-  splitPlans[3],
-  ['up', 'left', 'left', 'down', 'right', 'down', 'down', 'left', 'left', 'left', 'down', 'down', 'left', 'up', 'up', 'up', 'up', 'up', 'left', 'up', 'right'],
-  { fragileCount: 5, gates: [{ type: 'hard-switch' }, { type: 'soft-switch' }, { type: 'hard-switch' }] },
+const lastFoundry = withSolution(
+  buildLateSplitLevel(
+    { id: 'last-foundry', title: 'Last Foundry', passcode: 'LAST' },
+    splitPlans[3],
+    ['up', 'left', 'left', 'down', 'right', 'down', 'down', 'left', 'left', 'left', 'down', 'down', 'left', 'up', 'up', 'up', 'up', 'up', 'left', 'up', 'right'],
+    { fragileCount: 5, gates: [{ type: 'hard-switch' }, { type: 'soft-switch' }, { type: 'hard-switch' }] },
+  ),
+  lastFoundryToggleSolution,
 );
 
 export const chapterOneLevels: readonly LevelDefinition[] = [

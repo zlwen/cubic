@@ -31,7 +31,7 @@ export const onboardingTopics: readonly OnboardingTopic[] = [
     id: 'soft-switch',
     title: 'SOFT SWITCH',
     symbol: 'ROUND\nPRESS',
-    body: 'Any part of the whole block or either split cube can press a round soft switch.',
+    body: 'Any part of the whole block or either split cube can press it. Each press toggles its bridge between visible and hidden.',
   },
   {
     id: 'hard-switch',
