@@ -13,6 +13,7 @@ import {
   utils,
   Vec3,
 } from 'cc';
+import { occupiedCells } from './shared/game/index';
 import type { LevelDefinition, PuzzleState, TileDefinition } from './shared/game/index';
 
 const { ccclass, property } = _decorator;
@@ -30,6 +31,8 @@ export class BoardRenderer extends Component {
 
   private spawnedTiles: Node[] = [];
   private readonly bridgeNodes = new Map<string, Node[]>();
+  private readonly bridgeStates = new Map<string, boolean>();
+  private readonly switchNodes = new Map<string, Node>();
   private readonly fragileNodes = new Map<string, Node>();
   private readonly breakEffectNodes = new Set<Node>();
   private readonly breakTweenTargets = new Set<object>();
@@ -43,6 +46,9 @@ export class BoardRenderer extends Component {
       tileNode.setPosition(new Vec3(tile.x * this.tileSize, 0, tile.z * this.tileSize));
       this.spawnedTiles.push(tileNode);
       if (tile.type === 'fragile') this.fragileNodes.set(this.tileKey(tile.x, tile.z), tileNode);
+      if (tile.type === 'soft-switch' || tile.type === 'hard-switch') {
+        this.switchNodes.set(this.tileKey(tile.x, tile.z), tileNode);
+      }
     }
     for (const bridge of level.bridges ?? []) {
       const nodes: Node[] = [];
@@ -63,10 +69,19 @@ export class BoardRenderer extends Component {
   }
 
   applyState(state: PuzzleState): void {
+    let bridgeChanged = false;
     for (const [bridgeId, nodes] of this.bridgeNodes) {
       const active = state.bridgeStates[bridgeId] === true;
-      for (const node of nodes) node.active = active;
+      const previous = this.bridgeStates.get(bridgeId);
+      this.bridgeStates.set(bridgeId, active);
+      if (previous === undefined) {
+        for (const node of nodes) this.snapBridge(node, active);
+      } else if (previous !== active) {
+        bridgeChanged = true;
+        for (const node of nodes) this.animateBridge(node, bridgeId, active);
+      }
     }
+    if (bridgeChanged) this.animatePressedSwitch(state);
   }
 
   playFragileBreak(coord: { x: number; z: number }): void {
@@ -105,6 +120,8 @@ export class BoardRenderer extends Component {
     for (const tile of this.spawnedTiles) tile.destroy();
     this.spawnedTiles = [];
     this.bridgeNodes.clear();
+    this.bridgeStates.clear();
+    this.switchNodes.clear();
     this.fragileNodes.clear();
   }
 
@@ -164,6 +181,78 @@ export class BoardRenderer extends Component {
     this.addBase(node, new Color(40, 80, 91, 255));
     this.addBox(node, 'BridgeTop', new Vec3(0.984, 0.045, 0.984), new Vec3(0, 0.11, 0), new Color(78, 151, 159, 255));
     return node;
+  }
+
+  private snapBridge(node: Node, active: boolean): void {
+    Tween.stopAllByTarget(node);
+    node.setScale(1, 1, 1);
+    node.setPosition(node.position.x, active ? 0 : -0.26, node.position.z);
+    node.active = active;
+  }
+
+  private animateBridge(node: Node, bridgeId: string, active: boolean): void {
+    Tween.stopAllByTarget(node);
+    const x = node.position.x;
+    const z = node.position.z;
+    node.active = true;
+    if (active) {
+      node.setPosition(x, Math.min(node.position.y, -0.22), z);
+      node.setScale(0.94, 0.76, 0.94);
+      tween(node)
+        .to(0.2, {
+          position: new Vec3(x, 0.055, z),
+          scale: new Vec3(1.035, 1.08, 1.035),
+        }, { easing: 'quadOut' })
+        .to(0.11, {
+          position: new Vec3(x, 0, z),
+          scale: new Vec3(1, 1, 1),
+        }, { easing: 'quadInOut' })
+        .start();
+      return;
+    }
+
+    tween(node)
+      .to(0.08, {
+        position: new Vec3(x, 0.035, z),
+        scale: new Vec3(1.025, 1.04, 1.025),
+      }, { easing: 'quadOut' })
+      .to(0.22, {
+        position: new Vec3(x, -0.26, z),
+        scale: new Vec3(0.94, 0.76, 0.94),
+      }, { easing: 'quadIn' })
+      .call(() => {
+        if (this.bridgeStates.get(bridgeId) === false) node.active = false;
+      })
+      .start();
+  }
+
+  private animatePressedSwitch(state: PuzzleState): void {
+    const cells = state.split ? state.split.cubes : occupiedCells(state.block);
+    for (const cell of cells) {
+      const switchNode = this.switchNodes.get(this.tileKey(cell.x, cell.z));
+      if (!switchNode) continue;
+      const parts = [
+        switchNode.getChildByName('SoftSwitchOuter'),
+        switchNode.getChildByName('SoftSwitchInner'),
+        switchNode.getChildByName('HardSwitchA'),
+        switchNode.getChildByName('HardSwitchB'),
+      ];
+      for (const part of parts) {
+        if (!part) continue;
+        Tween.stopAllByTarget(part);
+        const rest = part.position.clone();
+        tween(part)
+          .to(0.07, {
+            position: new Vec3(rest.x, rest.y - 0.035, rest.z),
+            scale: new Vec3(1.06, 0.72, 1.06),
+          }, { easing: 'quadOut' })
+          .to(0.15, {
+            position: rest,
+            scale: new Vec3(1, 1, 1),
+          }, { easing: 'quadInOut' })
+          .start();
+      }
+    }
   }
 
   private addBase(parent: Node, color: Color, roughness = 0.88): void {

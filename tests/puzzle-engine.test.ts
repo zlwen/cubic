@@ -261,6 +261,26 @@ function testPasscodeLookup() {
   assert.equal(getLevelIndexByPasscode('123456'), -1);
 }
 
+function testStageFiveRightSwitch() {
+  const level = chapterOneLevels[4];
+  const engine = new PuzzleEngine(level);
+  const route = level.solution ?? [];
+  for (const action of route.slice(0, 21)) {
+    if (action === 'switch-cube') engine.switchActiveCube();
+    else engine.move(action);
+  }
+
+  const before = engine.getState();
+  assert.equal(before.bridgeStates['bridge-5-8'], false);
+  assert.equal(before.bridgeStates['bridge-6-8'], false);
+  const action = route[21];
+  if (!action || action === 'switch-cube') throw new Error('Stage 5 right switch route is invalid.');
+  const result = engine.move(action);
+  assert.deepEqual(occupiedCells(result.current.block), [{ x: 14, z: 6 }, { x: 14, z: 7 }]);
+  assert.equal(result.current.bridgeStates['bridge-5-8'], true);
+  assert.equal(result.current.bridgeStates['bridge-6-8'], true);
+}
+
 function testFragileTileRules() {
   const goal = { x: 6, z: 0 };
   const level: LevelDefinition = {
@@ -391,6 +411,7 @@ testUndoAndRestart();
 testInvalidLevelData();
 testTutorialLevels();
 testPasscodeLookup();
+testStageFiveRightSwitch();
 testFragileTileRules();
 testSwitchAndBridgeRules();
 testSplitMovementAndRecombination();
