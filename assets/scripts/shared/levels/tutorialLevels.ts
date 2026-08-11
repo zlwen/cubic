@@ -54,7 +54,7 @@ function convertLevel(raw: RawBloxorzLevel, index: number): LevelDefinition {
   let goal: GridCoord | undefined;
 
   raw.tiles.forEach((row, z) => {
-    [...row].forEach((symbol, x) => {
+    row.split('').forEach((symbol, x) => {
       if (symbol === 'e') {
         goal = { x, z };
         return;

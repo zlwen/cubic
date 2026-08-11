@@ -190,7 +190,7 @@ function testTutorialLevels() {
       `${bridge.cells[0].x},${bridge.cells[0].z}`,
       bridge,
     ]));
-    raw.tiles.forEach((row, z) => [...row].forEach((symbol, x) => {
+    raw.tiles.forEach((row, z) => row.split('').forEach((symbol, x) => {
       const key = `${x},${z}`;
       if (symbol === 'e') assert.deepEqual(level.goal, { x, z });
       else if (expectedTileTypes[symbol]) assert.equal(tiles.get(key), expectedTileTypes[symbol]);
