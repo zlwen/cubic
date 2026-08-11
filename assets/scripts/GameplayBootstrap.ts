@@ -93,20 +93,14 @@ export class GameplayBootstrap extends Component {
 
   private solidSpriteFrame: SpriteFrame | null = null;
   private logoSpriteFrame: SpriteFrame | null = null;
-  private uiFont: TTFFont | null = null;
   private displayFont: TTFFont | null = null;
 
   start(): void {
-    let pending = 3;
+    let pending = 2;
     const complete = (): void => {
       pending -= 1;
       if (pending === 0) this.initialize();
     };
-    resources.load('fonts/NotoSansSC-Medium', TTFFont, (error, font) => {
-      if (error) console.warn('UI font failed to load.', error);
-      else this.uiFont = font;
-      complete();
-    });
     resources.load('fonts/Oxanium-SemiBold', TTFFont, (error, font) => {
       if (error) console.warn('Display font failed to load.', error);
       else this.displayFont = font;
@@ -814,7 +808,7 @@ export class GameplayBootstrap extends Component {
     node.setPosition(position);
     const label = node.addComponent(Label);
     label.string = text;
-    label.font = fontRole === 'display' ? this.displayFont : this.uiFont;
+    label.font = fontRole === 'display' ? this.displayFont : null;
     label.fontSize = fontSize;
     label.lineHeight = fontSize + 4;
     label.horizontalAlign = HorizontalTextAlignment.CENTER;
