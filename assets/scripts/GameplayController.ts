@@ -27,6 +27,7 @@ import {
   resetCampaignProgress,
   resumeSavedRun,
   translate,
+  withAcknowledgedTutorials,
   withUnlockedLevel,
   withBestStarRating,
 } from './shared/game/index';
@@ -683,9 +684,10 @@ export class GameplayController extends Component {
   }
 
   private acknowledgeTopics(topics: readonly OnboardingTopic[]): void {
-    const acknowledged = new Set(this.saveData.acknowledgedTutorials);
-    for (const topic of topics) acknowledged.add(topic.id);
-    this.saveData = { ...this.saveData, acknowledgedTutorials: [...acknowledged] };
+    this.saveData = withAcknowledgedTutorials(
+      this.saveData,
+      topics.map((topic) => topic.id),
+    );
     this.saveRepository.save(this.saveData);
   }
 

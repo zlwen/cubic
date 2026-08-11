@@ -90,7 +90,7 @@ export function normalizeReleaseSave(
     : defaults.soundEnabled;
   const language = isGameLanguage(input.language) ? input.language : defaults.language;
   const acknowledgedTutorials = Array.isArray(input.acknowledgedTutorials)
-    ? [...new Set(input.acknowledgedTutorials.filter(isTutorialTopicId))]
+    ? Array.from(new Set(input.acknowledgedTutorials.filter(isTutorialTopicId)))
     : defaults.acknowledgedTutorials;
   const bestStarsByLevel = normalizeBestStars(input.bestStarsByLevel, levels);
   const currentRun = input.version === RELEASE_SAVE_VERSION
@@ -177,6 +177,18 @@ export function withBestStarRating(
       ...save.bestStarsByLevel,
       [levelId]: rating,
     },
+  };
+}
+
+export function withAcknowledgedTutorials(
+  save: ReleaseSaveData,
+  topicIds: readonly TutorialTopicId[],
+): ReleaseSaveData {
+  const acknowledged = new Set(save.acknowledgedTutorials);
+  for (const topicId of topicIds) acknowledged.add(topicId);
+  return {
+    ...save,
+    acknowledgedTutorials: Array.from(acknowledged),
   };
 }
 

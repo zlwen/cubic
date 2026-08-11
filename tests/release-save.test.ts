@@ -15,6 +15,7 @@ import {
   resumeSavedRun,
   serializeReleaseSave,
   translate,
+  withAcknowledgedTutorials,
   withUnlockedLevel,
   withBestStarRating,
 } from '../src/game/index';
@@ -183,6 +184,21 @@ function testContextualOnboardingSelection() {
   );
 }
 
+function testTutorialAcknowledgementsPersistAsPlainArrays() {
+  const acknowledged = withAcknowledgedTutorials(
+    createDefaultReleaseSave(chapterOneLevels),
+    ['movement', 'goal', 'movement'],
+  );
+  check.deepEqual(acknowledged.acknowledgedTutorials, ['movement', 'goal']);
+  check.deepEqual(
+    JSON.parse(serializeReleaseSave(acknowledged)).acknowledgedTutorials,
+    ['movement', 'goal'],
+  );
+
+  const decoded = decodeReleaseSave(serializeReleaseSave(acknowledged), chapterOneLevels);
+  check.deepEqual(pendingOnboardingTopics(chapterOneLevels[0], decoded.acknowledgedTutorials), []);
+}
+
 function testNewGamePreservesPreferencesAndRestartsTutorials() {
   const progressed: ReleaseSaveData = {
     ...withUnlockedLevel(createDefaultReleaseSave(chapterOneLevels), 8, chapterOneLevels),
@@ -273,6 +289,7 @@ testMalformedAndUnsupportedSaveRecovery();
 testUnlockProgressionIsMonotonic();
 testStarRatingAndBestResultPersistence();
 testContextualOnboardingSelection();
+testTutorialAcknowledgementsPersistAsPlainArrays();
 testNewGamePreservesPreferencesAndRestartsTutorials();
 testTutorialsFollowFeatureIntroduction();
 testLanguageSelectionAndCatalogs();
