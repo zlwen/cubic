@@ -363,9 +363,11 @@ export class GameplayBootstrap extends Component {
       visibleSize.height,
       new Color(6, 7, 9, 148),
     );
-    const titleBand = this.createUiRoot('TitleBand', titleMenuRoot, 390, visibleSize.height);
-    titleBand.setPosition(-visibleSize.width * 0.5 + 195, 0);
-    this.drawPanel(titleBand, 390, visibleSize.height, new Color(12, 14, 17, 238));
+    const titleBandWidth = 370;
+    const titleBandHeight = visibleSize.height - 48;
+    const titleBand = this.createUiRoot('TitleBand', titleMenuRoot, titleBandWidth, titleBandHeight);
+    titleBand.setPosition(-visibleSize.width * 0.5 + titleBandWidth * 0.5 + 24, 0);
+    this.drawPanel(titleBand, titleBandWidth, titleBandHeight, new Color(12, 14, 17, 238));
     const titleY = Math.min(205, visibleSize.height * 0.32);
     if (this.logoSpriteFrame) {
       const logoSize = Math.min(82, visibleSize.height * 0.15);
