@@ -60,6 +60,7 @@ const oppositeDirection: Record<Direction, Direction> = {
 type GameMode =
   | 'title'
   | 'stage-select'
+  | 'passcode'
   | 'how-to-play'
   | 'credits'
   | 'playing'
@@ -108,6 +109,9 @@ export class GameplayController extends Component {
 
   @property(Node)
   stageSelectRoot: Node | null = null;
+
+  @property(Node)
+  passcodeRoot: Node | null = null;
 
   @property(Node)
   howToPlayRoot: Node | null = null;
@@ -196,6 +200,9 @@ export class GameplayController extends Component {
   stageButtons: Button[] = [];
   stageButtonLabels: Label[] = [];
   stageStarLabels: Label[] = [];
+  completedPasscodeButtons: Button[] = [];
+  completedPasscodeLevelLabels: Label[] = [];
+  completedPasscodeValueLabels: Label[] = [];
   localizedLabels: Partial<Record<UiTextKey, Label[]>> = {};
 
   private readonly platform = createPlatformAdapter();
@@ -283,6 +290,16 @@ export class GameplayController extends Component {
     this.showOnly(this.stageSelectRoot);
   }
 
+  openPasscode(): void {
+    this.audioController?.playUi();
+    this.mode = 'passcode';
+    this.bufferedMove = null;
+    if (this.passcodeInput) this.passcodeInput.string = '';
+    if (this.passcodeFeedback) this.passcodeFeedback.string = '';
+    this.refreshCompletedPasscodes();
+    this.showOnly(this.passcodeRoot);
+  }
+
   selectStage(_event: unknown, customEventData: string): void {
     const index = Number.parseInt(customEventData, 10);
     if (!Number.isInteger(index)
@@ -300,6 +317,16 @@ export class GameplayController extends Component {
       }
       return;
     }
+    this.audioController?.playUi();
+    this.loadLevel(index);
+  }
+
+  selectCompletedPasscode(_event: unknown, customEventData: string): void {
+    const index = Number.parseInt(customEventData, 10);
+    if (!Number.isInteger(index)
+      || index < 0
+      || index >= chapterOneLevels.length
+      || getBestStarRating(this.saveData, chapterOneLevels[index].id) === 0) return;
     this.audioController?.playUi();
     this.loadLevel(index);
   }
@@ -760,6 +787,24 @@ export class GameplayController extends Component {
     });
   }
 
+  private refreshCompletedPasscodes(): void {
+    this.completedPasscodeButtons.forEach((button, levelIndex) => {
+      const level = chapterOneLevels[levelIndex];
+      const completed = level !== undefined
+        && getBestStarRating(this.saveData, level.id) > 0;
+      button.node.active = level !== undefined;
+      button.interactable = completed;
+      if (!level) return;
+      const column = levelIndex % 6;
+      const row = Math.floor(levelIndex / 6);
+      button.node.setPosition((column - 2.5) * 116, 22 - row * 38, 0);
+      const levelLabel = this.completedPasscodeLevelLabels[levelIndex];
+      if (levelLabel) levelLabel.string = this.twoDigits(levelIndex + 1);
+      const valueLabel = this.completedPasscodeValueLabels[levelIndex];
+      if (valueLabel) valueLabel.string = completed ? level.passcode : '******';
+    });
+  }
+
   private updateTitleMenu(): void {
     const resumed = resumeSavedRun(this.saveData, chapterOneLevels);
     if (this.resumeButton) this.resumeButton.interactable = resumed !== null;
@@ -840,6 +885,7 @@ export class GameplayController extends Component {
       this.titleMenuRoot,
       this.pauseMenuRoot,
       this.stageSelectRoot,
+      this.passcodeRoot,
       this.howToPlayRoot,
       this.creditsRoot,
       this.newGameConfirmRoot,

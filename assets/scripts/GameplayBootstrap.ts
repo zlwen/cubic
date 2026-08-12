@@ -49,6 +49,7 @@ interface GameplayUi {
   readonly pauseMenuRoot: Node;
   readonly titleMenuRoot: Node;
   readonly stageSelectRoot: Node;
+  readonly passcodeRoot: Node;
   readonly howToPlayRoot: Node;
   readonly creditsRoot: Node;
   readonly newGameConfirmRoot: Node;
@@ -80,6 +81,9 @@ interface GameplayUi {
   readonly stageButtons: Button[];
   readonly stageButtonLabels: Label[];
   readonly stageStarLabels: Label[];
+  readonly completedPasscodeButtons: Button[];
+  readonly completedPasscodeLevelLabels: Label[];
+  readonly completedPasscodeValueLabels: Label[];
   readonly localizedLabels: Partial<Record<UiTextKey, Label[]>>;
 }
 
@@ -148,6 +152,7 @@ export class GameplayBootstrap extends Component {
     gameplay.pauseMenuRoot = ui.pauseMenuRoot;
     gameplay.titleMenuRoot = ui.titleMenuRoot;
     gameplay.stageSelectRoot = ui.stageSelectRoot;
+    gameplay.passcodeRoot = ui.passcodeRoot;
     gameplay.howToPlayRoot = ui.howToPlayRoot;
     gameplay.creditsRoot = ui.creditsRoot;
     gameplay.newGameConfirmRoot = ui.newGameConfirmRoot;
@@ -179,6 +184,9 @@ export class GameplayBootstrap extends Component {
     gameplay.stageButtons = ui.stageButtons;
     gameplay.stageButtonLabels = ui.stageButtonLabels;
     gameplay.stageStarLabels = ui.stageStarLabels;
+    gameplay.completedPasscodeButtons = ui.completedPasscodeButtons;
+    gameplay.completedPasscodeLevelLabels = ui.completedPasscodeLevelLabels;
+    gameplay.completedPasscodeValueLabels = ui.completedPasscodeValueLabels;
     gameplay.localizedLabels = ui.localizedLabels;
   }
 
@@ -381,13 +389,13 @@ export class GameplayBootstrap extends Component {
     const startButton = this.createButton(titleBand, 'StartButton', 'START NEW GAME', new Vec3(0, 30, 0), 'startGame', 300, 42, '', 'primary');
     const resume = this.createButton(titleBand, 'ResumeButton', 'RESUME GAME', new Vec3(0, -20, 0), 'resumeGame', 300, 42);
     const loadStageButton = this.createButton(titleBand, 'LoadStageButton', 'LOAD STAGE', new Vec3(0, -70, 0), 'openStageSelect', 300, 42);
-    const howToButton = this.createButton(titleBand, 'HowToButton', 'HOW TO PLAY', new Vec3(0, -120, 0), 'showHowToPlay', 300, 42);
+    const passcodeMenuButton = this.createButton(titleBand, 'PasscodeMenuButton', 'ENTER PASSCODE', new Vec3(0, -120, 0), 'openPasscode', 300, 42);
     const titleSoundButton = this.createButton(titleBand, 'TitleSoundButton', 'TOGGLE SOUND: ON', new Vec3(0, -170, 0), 'toggleSound', 300, 42, '', 'subtle');
     const titleLanguageButton = this.createButton(titleBand, 'TitleLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -220, 0), 'cycleLanguage', 300, 42, '', 'subtle');
     const creditsButton = this.createButton(titleBand, 'CreditsButton', 'CREDITS', new Vec3(0, -270, 0), 'showCredits', 300, 42, '', 'subtle');
     bind('startNewGame', startButton.label);
     bind('loadStage', loadStageButton.label);
-    bind('howToPlay', howToButton.label);
+    bind('enterPasscode', passcodeMenuButton.label);
     bind('credits', creditsButton.label);
 
     const stageSelectRoot = this.createOverlay(
@@ -436,22 +444,82 @@ export class GameplayBootstrap extends Component {
       stageButtonLabels.push(stageButton.label);
       stageStarLabels.push(starLabel);
     }
-    const passcodeInput = this.createPasscodeInput(stageSelectRoot, new Vec3(-70, -96, 0));
-    const passcodeButton = this.createButton(stageSelectRoot, 'PasscodeButton', 'ENTER', new Vec3(145, -96, 0), 'submitPasscode', 140, 52, '', 'primary');
+    const stageBackButton = this.createButton(stageSelectRoot, 'StageBackButton', 'BACK', new Vec3(0, -96, 0), 'returnToTitle', 180, 44, '', 'subtle');
+    bind('back', stageBackButton.label);
+    stageSelectRoot.active = false;
+
+    const passcodeRoot = this.createOverlay(
+      'Passcode',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(6, 7, 9, 248),
+    );
+    const passcodeTitle = this.createLabel('PasscodeTitle', 'ENTER PASSCODE', new Vec3(0, 205, 0), 600, 52, 34);
+    passcodeTitle.node.setParent(passcodeRoot);
+    bind('enterPasscode', passcodeTitle);
+    const passcodeInput = this.createPasscodeInput(passcodeRoot, new Vec3(-80, 135, 0));
+    const passcodeButton = this.createButton(passcodeRoot, 'PasscodeButton', 'ENTER', new Vec3(150, 135, 0), 'submitPasscode', 140, 52, '', 'primary');
     bind('enter', passcodeButton.label);
     const passcodeFeedback = this.createLabel(
       'PasscodeFeedback',
       '',
-      new Vec3(0, -145, 0),
+      new Vec3(0, 96, 0),
       460,
       32,
       15,
     );
     passcodeFeedback.color = new Color(218, 91, 99, 255);
-    passcodeFeedback.node.setParent(stageSelectRoot);
-    const stageBackButton = this.createButton(stageSelectRoot, 'StageBackButton', 'BACK', new Vec3(0, -196, 0), 'returnToTitle', 180, 44, '', 'subtle');
-    bind('back', stageBackButton.label);
-    stageSelectRoot.active = false;
+    passcodeFeedback.node.setParent(passcodeRoot);
+    const completedPasscodesTitle = this.createLabel(
+      'CompletedPasscodesTitle',
+      'PASSCODES',
+      new Vec3(0, 64, 0),
+      500,
+      30,
+      18,
+    );
+    completedPasscodesTitle.color = new Color(198, 201, 207, 255);
+    completedPasscodesTitle.node.setParent(passcodeRoot);
+    bind('completedPasscodes', completedPasscodesTitle);
+    const completedPasscodeButtons: Button[] = [];
+    const completedPasscodeLevelLabels: Label[] = [];
+    const completedPasscodeValueLabels: Label[] = [];
+    for (let index = 0; index < 33; index += 1) {
+      const level = index + 1;
+      const completedButton = this.createButton(
+        passcodeRoot,
+        `CompletedPasscode${level}`,
+        index === 0 ? '780464' : '------',
+        Vec3.ZERO,
+        'selectCompletedPasscode',
+        106,
+        30,
+        String(index),
+        'stage',
+      );
+      completedButton.label.fontSize = 13;
+      completedButton.label.lineHeight = 17;
+      completedButton.label.node.getComponent(UITransform)?.setContentSize(64, 26);
+      completedButton.label.node.setPosition(12, 0, 0);
+      const levelLabel = this.createLabel(
+        `CompletedPasscodeLevel${level}`,
+        level < 10 ? `0${level}` : String(level),
+        new Vec3(-35, 0, 0),
+        24,
+        26,
+        13,
+        'display',
+      );
+      levelLabel.color = new Color(218, 185, 105, 255);
+      levelLabel.node.setParent(completedButton.button.node);
+      completedPasscodeButtons.push(completedButton.button);
+      completedPasscodeLevelLabels.push(levelLabel);
+      completedPasscodeValueLabels.push(completedButton.label);
+    }
+    const passcodeBackButton = this.createButton(passcodeRoot, 'PasscodeBackButton', 'BACK', new Vec3(0, -215, 0), 'returnToTitle', 180, 44, '', 'subtle');
+    bind('back', passcodeBackButton.label);
+    passcodeRoot.active = false;
 
     const howToPlayRoot = this.createOverlay(
       'HowToPlay',
@@ -668,6 +736,7 @@ export class GameplayBootstrap extends Component {
       pauseMenuRoot,
       titleMenuRoot,
       stageSelectRoot,
+      passcodeRoot,
       howToPlayRoot,
       creditsRoot,
       newGameConfirmRoot,
@@ -699,6 +768,9 @@ export class GameplayBootstrap extends Component {
       stageButtons,
       stageButtonLabels,
       stageStarLabels,
+      completedPasscodeButtons,
+      completedPasscodeLevelLabels,
+      completedPasscodeValueLabels,
       localizedLabels,
     };
   }
