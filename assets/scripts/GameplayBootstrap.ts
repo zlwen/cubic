@@ -370,33 +370,21 @@ export class GameplayBootstrap extends Component {
     this.drawPanel(titleBand, titleBandWidth, titleBandHeight, new Color(12, 14, 17, 238));
     const titleY = Math.min(205, visibleSize.height * 0.32);
     if (this.logoSpriteFrame) {
-      const logoSize = Math.min(82, visibleSize.height * 0.15);
-      const logoNode = this.createUiRoot('GameLogo', titleBand, logoSize, logoSize);
-      logoNode.setPosition(-96, titleY);
+      const logoWidth = Math.min(280, titleBandWidth - 42);
+      const logoHeight = logoWidth * (164 / 190);
+      const logoNode = this.createUiRoot('GameLogo', titleBand, logoWidth, logoHeight);
+      logoNode.setPosition(0, titleY);
       const logo = logoNode.addComponent(Sprite);
       logo.sizeMode = Sprite.SizeMode.CUSTOM;
       logo.spriteFrame = this.logoSpriteFrame;
     }
-    const title = this.createLabel('GameTitle', 'CUBIC', new Vec3(40, titleY, 0), 250, 74, 58, 'display');
-    title.node.setParent(titleBand);
-    const subtitle = this.createLabel(
-      'GameSubtitle',
-      'ROLLING BLOCK PUZZLE',
-      new Vec3(0, titleY - 50, 0),
-      350,
-      34,
-      14,
-    );
-    subtitle.color = new Color(164, 166, 172, 255);
-    subtitle.node.setParent(titleBand);
-    bind('gameSubtitle', subtitle);
-    const startButton = this.createButton(titleBand, 'StartButton', 'START NEW GAME', new Vec3(0, 82, 0), 'startGame', 300, 42, '', 'primary');
-    const resume = this.createButton(titleBand, 'ResumeButton', 'RESUME GAME', new Vec3(0, 32, 0), 'resumeGame', 300, 42);
-    const loadStageButton = this.createButton(titleBand, 'LoadStageButton', 'LOAD STAGE', new Vec3(0, -18, 0), 'openStageSelect', 300, 42);
-    const howToButton = this.createButton(titleBand, 'HowToButton', 'HOW TO PLAY', new Vec3(0, -68, 0), 'showHowToPlay', 300, 42);
-    const titleSoundButton = this.createButton(titleBand, 'TitleSoundButton', 'TOGGLE SOUND: ON', new Vec3(0, -118, 0), 'toggleSound', 300, 42, '', 'subtle');
-    const titleLanguageButton = this.createButton(titleBand, 'TitleLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -168, 0), 'cycleLanguage', 300, 42, '', 'subtle');
-    const creditsButton = this.createButton(titleBand, 'CreditsButton', 'CREDITS', new Vec3(0, -218, 0), 'showCredits', 300, 42, '', 'subtle');
+    const startButton = this.createButton(titleBand, 'StartButton', 'START NEW GAME', new Vec3(0, 30, 0), 'startGame', 300, 42, '', 'primary');
+    const resume = this.createButton(titleBand, 'ResumeButton', 'RESUME GAME', new Vec3(0, -20, 0), 'resumeGame', 300, 42);
+    const loadStageButton = this.createButton(titleBand, 'LoadStageButton', 'LOAD STAGE', new Vec3(0, -70, 0), 'openStageSelect', 300, 42);
+    const howToButton = this.createButton(titleBand, 'HowToButton', 'HOW TO PLAY', new Vec3(0, -120, 0), 'showHowToPlay', 300, 42);
+    const titleSoundButton = this.createButton(titleBand, 'TitleSoundButton', 'TOGGLE SOUND: ON', new Vec3(0, -170, 0), 'toggleSound', 300, 42, '', 'subtle');
+    const titleLanguageButton = this.createButton(titleBand, 'TitleLanguageButton', 'LANGUAGE: ENGLISH', new Vec3(0, -220, 0), 'cycleLanguage', 300, 42, '', 'subtle');
+    const creditsButton = this.createButton(titleBand, 'CreditsButton', 'CREDITS', new Vec3(0, -270, 0), 'showCredits', 300, 42, '', 'subtle');
     bind('startNewGame', startButton.label);
     bind('loadStage', loadStageButton.label);
     bind('howToPlay', howToButton.label);
