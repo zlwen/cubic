@@ -183,6 +183,9 @@ export class GameplayController extends Component {
   completionContinueLabel: Label | null = null;
 
   @property(Label)
+  campaignStarsLabel: Label | null = null;
+
+  @property(Label)
   tutorialTitleLabel: Label | null = null;
 
   @property(Label)
@@ -656,12 +659,24 @@ export class GameplayController extends Component {
         ? translate(this.saveData.language, 'continue')
         : translate(this.saveData.language, 'returnToMenu');
     }
+    const completedAllLevels = chapterOneLevels.every(
+      (candidate) => getBestStarRating(this.saveData, candidate.id) > 0,
+    );
+    if (completedAllLevels && this.campaignStarsLabel) {
+      const earnedStars = chapterOneLevels.reduce(
+        (total, candidate) => total + getBestStarRating(this.saveData, candidate.id),
+        0,
+      );
+      this.campaignStarsLabel.string = translate(this.saveData.language, 'campaignStars', {
+        stars: earnedStars,
+        maxStars: chapterOneLevels.length * 3,
+      });
+    }
     this.block?.playGoalDrop(() => {
-      const campaignComplete = this.levelIndex + 1 >= chapterOneLevels.length;
-      this.mode = campaignComplete ? 'campaign-complete' : 'completed';
+      this.mode = completedAllLevels ? 'campaign-complete' : 'completed';
       this.bufferedMove = null;
       this.hideAllOverlays();
-      const resultRoot = campaignComplete ? this.campaignCompleteRoot : this.completionRoot;
+      const resultRoot = completedAllLevels ? this.campaignCompleteRoot : this.completionRoot;
       if (resultRoot) resultRoot.active = true;
     });
   }

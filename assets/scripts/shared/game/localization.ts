@@ -50,6 +50,7 @@ const englishUi = {
   completionStats: 'MOVES  {moves} / BEST  {optimal}\nTIME  {time}\nPASSCODE  {passcode}',
   campaignCompleteTitle: 'CONGRATULATIONS!',
   campaignCompleteCopy: 'YOU COMPLETED EVERY STAGE.',
+  campaignStars: 'STARS  {stars} / {maxStars}',
   newStagesComingSoon: 'MORE STAGES ARE COMING. STAY TUNED!',
 } as const;
 
@@ -104,6 +105,7 @@ const uiCatalogs: Record<GameLanguage, UiCatalog> = {
     completionStats: '步数  {moves} / 最优  {optimal}\n时间  {time}\n密码  {passcode}',
     campaignCompleteTitle: '恭喜全部通关！',
     campaignCompleteCopy: '你已完成全部关卡。',
+    campaignStars: '获得星星  {stars} / {maxStars}',
     newStagesComingSoon: '新关卡正在准备中，敬请期待！',
   },
   'zh-TW': {
@@ -152,6 +154,7 @@ const uiCatalogs: Record<GameLanguage, UiCatalog> = {
     completionStats: '步數  {moves} / 最優  {optimal}\n時間  {time}\n密碼  {passcode}',
     campaignCompleteTitle: '恭喜全部通關！',
     campaignCompleteCopy: '你已完成全部關卡。',
+    campaignStars: '獲得星星  {stars} / {maxStars}',
     newStagesComingSoon: '新關卡正在準備中，敬請期待！',
   },
 };

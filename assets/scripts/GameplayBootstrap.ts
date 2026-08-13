@@ -69,6 +69,7 @@ interface GameplayUi {
   readonly completionStatsLabel: Label;
   readonly completionStarsLabel: Label;
   readonly completionContinueLabel: Label;
+  readonly campaignStarsLabel: Label;
   readonly tutorialTitleLabel: Label;
   readonly tutorialSymbolLabel: Label;
   readonly tutorialBodyLabel: Label;
@@ -173,6 +174,7 @@ export class GameplayBootstrap extends Component {
     gameplay.completionStatsLabel = ui.completionStatsLabel;
     gameplay.completionStarsLabel = ui.completionStarsLabel;
     gameplay.completionContinueLabel = ui.completionContinueLabel;
+    gameplay.campaignStarsLabel = ui.campaignStarsLabel;
     gameplay.tutorialTitleLabel = ui.tutorialTitleLabel;
     gameplay.tutorialSymbolLabel = ui.tutorialSymbolLabel;
     gameplay.tutorialBodyLabel = ui.tutorialBodyLabel;
@@ -665,13 +667,16 @@ export class GameplayBootstrap extends Component {
     campaignTitle.color = new Color(245, 213, 123, 255);
     campaignTitle.node.setParent(campaignPanel);
     bind('campaignCompleteTitle', campaignTitle);
-    const campaignProgress = this.createLabel('CampaignCompleteProgress', '33 / 33', new Vec3(0, 34, 0), 260, 38, 22, 'display');
+    const campaignProgress = this.createLabel('CampaignCompleteProgress', '33 / 33', new Vec3(0, 38, 0), 260, 34, 22, 'display');
     campaignProgress.color = new Color(154, 202, 193, 255);
     campaignProgress.node.setParent(campaignPanel);
-    const campaignCopy = this.createLabel('CampaignCompleteCopy', 'YOU COMPLETED EVERY STAGE.', new Vec3(0, -8, 0), campaignPanelWidth - 64, 34, 17);
+    const campaignStarsLabel = this.createLabel('CampaignStars', 'STARS  33 / 99', new Vec3(0, 4, 0), 320, 30, 18, 'display');
+    campaignStarsLabel.color = new Color(218, 185, 105, 255);
+    campaignStarsLabel.node.setParent(campaignPanel);
+    const campaignCopy = this.createLabel('CampaignCompleteCopy', 'YOU COMPLETED EVERY STAGE.', new Vec3(0, -30, 0), campaignPanelWidth - 64, 30, 17);
     campaignCopy.node.setParent(campaignPanel);
     bind('campaignCompleteCopy', campaignCopy);
-    const comingSoon = this.createLabel('ComingSoon', 'MORE STAGES ARE COMING. STAY TUNED!', new Vec3(0, -52, 0), campaignPanelWidth - 64, 42, 17);
+    const comingSoon = this.createLabel('ComingSoon', 'MORE STAGES ARE COMING. STAY TUNED!', new Vec3(0, -65, 0), campaignPanelWidth - 64, 36, 17);
     comingSoon.color = new Color(174, 177, 184, 255);
     comingSoon.node.setParent(campaignPanel);
     bind('newStagesComingSoon', comingSoon);
@@ -791,6 +796,7 @@ export class GameplayBootstrap extends Component {
       completionStatsLabel,
       completionStarsLabel,
       completionContinueLabel: continueButton.label,
+      campaignStarsLabel,
       tutorialTitleLabel,
       tutorialSymbolLabel,
       tutorialBodyLabel,
