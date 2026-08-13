@@ -48,6 +48,9 @@ const englishUi = {
   returnToGame: 'RETURN TO GAME',
   invalidPasscode: 'INVALID PASSCODE',
   completionStats: 'MOVES  {moves} / BEST  {optimal}\nTIME  {time}\nPASSCODE  {passcode}',
+  campaignCompleteTitle: 'CONGRATULATIONS!',
+  campaignCompleteCopy: 'YOU COMPLETED EVERY STAGE.',
+  newStagesComingSoon: 'MORE STAGES ARE COMING. STAY TUNED!',
 } as const;
 
 export type UiTextKey = keyof typeof englishUi;
@@ -99,6 +102,9 @@ const uiCatalogs: Record<GameLanguage, UiCatalog> = {
     returnToGame: '返回游戏',
     invalidPasscode: '密码无效',
     completionStats: '步数  {moves} / 最优  {optimal}\n时间  {time}\n密码  {passcode}',
+    campaignCompleteTitle: '恭喜全部通关！',
+    campaignCompleteCopy: '你已完成全部关卡。',
+    newStagesComingSoon: '新关卡正在准备中，敬请期待！',
   },
   'zh-TW': {
     gameSubtitle: '滾動方塊謎題',
@@ -144,6 +150,9 @@ const uiCatalogs: Record<GameLanguage, UiCatalog> = {
     returnToGame: '返回遊戲',
     invalidPasscode: '密碼無效',
     completionStats: '步數  {moves} / 最優  {optimal}\n時間  {time}\n密碼  {passcode}',
+    campaignCompleteTitle: '恭喜全部通關！',
+    campaignCompleteCopy: '你已完成全部關卡。',
+    newStagesComingSoon: '新關卡正在準備中，敬請期待！',
   },
 };
 

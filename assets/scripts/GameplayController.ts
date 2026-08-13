@@ -57,6 +57,17 @@ const oppositeDirection: Record<Direction, Direction> = {
   right: 'left',
 };
 
+const keyboardDirections = new Map<KeyCode, Direction>([
+  [KeyCode.ARROW_UP, 'down'],
+  [KeyCode.KEY_W, 'down'],
+  [KeyCode.ARROW_DOWN, 'up'],
+  [KeyCode.KEY_S, 'up'],
+  [KeyCode.ARROW_LEFT, 'right'],
+  [KeyCode.KEY_A, 'right'],
+  [KeyCode.ARROW_RIGHT, 'left'],
+  [KeyCode.KEY_D, 'left'],
+]);
+
 type GameMode =
   | 'title'
   | 'stage-select'
@@ -67,7 +78,8 @@ type GameMode =
   | 'paused'
   | 'tutorial'
   | 'failed'
-  | 'completed';
+  | 'completed'
+  | 'campaign-complete';
 
 @ccclass('GameplayController')
 export class GameplayController extends Component {
@@ -127,6 +139,9 @@ export class GameplayController extends Component {
 
   @property(Node)
   completionRoot: Node | null = null;
+
+  @property(Node)
+  campaignCompleteRoot: Node | null = null;
 
   @property(Node)
   tutorialRoot: Node | null = null;
@@ -642,10 +657,12 @@ export class GameplayController extends Component {
         : translate(this.saveData.language, 'returnToMenu');
     }
     this.block?.playGoalDrop(() => {
-      this.mode = 'completed';
+      const campaignComplete = this.levelIndex + 1 >= chapterOneLevels.length;
+      this.mode = campaignComplete ? 'campaign-complete' : 'completed';
       this.bufferedMove = null;
       this.hideAllOverlays();
-      if (this.completionRoot) this.completionRoot.active = true;
+      const resultRoot = campaignComplete ? this.campaignCompleteRoot : this.completionRoot;
+      if (resultRoot) resultRoot.active = true;
     });
   }
 
@@ -659,6 +676,17 @@ export class GameplayController extends Component {
   }
 
   private handleKeyDown(event: EventKeyboard): void {
+    if (this.mode === 'playing') {
+      const direction = keyboardDirections.get(event.keyCode);
+      if (direction) {
+        this.requestMove(direction);
+        return;
+      }
+      if (event.keyCode === KeyCode.SPACE) {
+        this.switchCube();
+        return;
+      }
+    }
     if (event.keyCode !== KeyCode.MOBILE_BACK && event.keyCode !== KeyCode.ESCAPE) return;
     if (this.mode === 'playing') {
       this.openMenu();
@@ -891,6 +919,7 @@ export class GameplayController extends Component {
       this.newGameConfirmRoot,
       this.failureRoot,
       this.completionRoot,
+      this.campaignCompleteRoot,
       this.tutorialRoot,
     ]) {
       if (root) root.active = false;

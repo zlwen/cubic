@@ -55,6 +55,7 @@ interface GameplayUi {
   readonly newGameConfirmRoot: Node;
   readonly failureRoot: Node;
   readonly completionRoot: Node;
+  readonly campaignCompleteRoot: Node;
   readonly tutorialRoot: Node;
   readonly passcodeInput: EditBox;
   readonly passcodeFeedback: Label;
@@ -158,6 +159,7 @@ export class GameplayBootstrap extends Component {
     gameplay.newGameConfirmRoot = ui.newGameConfirmRoot;
     gameplay.failureRoot = ui.failureRoot;
     gameplay.completionRoot = ui.completionRoot;
+    gameplay.campaignCompleteRoot = ui.campaignCompleteRoot;
     gameplay.tutorialRoot = ui.tutorialRoot;
     gameplay.passcodeInput = ui.passcodeInput;
     gameplay.passcodeFeedback = ui.passcodeFeedback;
@@ -376,10 +378,12 @@ export class GameplayBootstrap extends Component {
     const titleBand = this.createUiRoot('TitleBand', titleMenuRoot, titleBandWidth, titleBandHeight);
     titleBand.setPosition(-visibleSize.width * 0.5 + titleBandWidth * 0.5 + 24, 0);
     this.drawPanel(titleBand, titleBandWidth, titleBandHeight, new Color(12, 14, 17, 238));
-    const titleY = Math.min(205, visibleSize.height * 0.32);
+    const titleY = Math.min(195, visibleSize.height * 0.32);
     if (this.logoSpriteFrame) {
-      const logoWidth = Math.min(280, titleBandWidth - 42);
-      const logoHeight = logoWidth * (164 / 190);
+      const logoAspect = 448 / 600;
+      const maxLogoHeight = Math.max(120, (titleY - 67) * 2);
+      const logoWidth = Math.min(320, titleBandWidth - 30, maxLogoHeight / logoAspect);
+      const logoHeight = logoWidth * logoAspect;
       const logoNode = this.createUiRoot('GameLogo', titleBand, logoWidth, logoHeight);
       logoNode.setPosition(0, titleY);
       const logo = logoNode.addComponent(Sprite);
@@ -644,6 +648,37 @@ export class GameplayBootstrap extends Component {
     bind('quitToMenu', completeQuitButton.label);
     completionRoot.active = false;
 
+    const campaignCompleteRoot = this.createOverlay(
+      'CampaignComplete',
+      safeArea,
+      visibleSize.width,
+      visibleSize.height,
+      new Color(3, 4, 5, 238),
+    );
+    const campaignPanelWidth = Math.min(540, visibleSize.width - 48);
+    const campaignPanel = this.createUiRoot('CampaignCompletePanel', campaignCompleteRoot, campaignPanelWidth, 360);
+    this.drawPanel(campaignPanel, campaignPanelWidth, 360, new Color(22, 25, 30, 252));
+    const campaignSymbol = this.createLabel('CampaignCompleteSymbol', '★  ★  ★', new Vec3(0, 130, 0), 320, 42, 30, 'display');
+    campaignSymbol.color = new Color(218, 185, 105, 255);
+    campaignSymbol.node.setParent(campaignPanel);
+    const campaignTitle = this.createLabel('CampaignCompleteTitle', 'CONGRATULATIONS!', new Vec3(0, 82, 0), campaignPanelWidth - 48, 46, 30);
+    campaignTitle.color = new Color(245, 213, 123, 255);
+    campaignTitle.node.setParent(campaignPanel);
+    bind('campaignCompleteTitle', campaignTitle);
+    const campaignProgress = this.createLabel('CampaignCompleteProgress', '33 / 33', new Vec3(0, 34, 0), 260, 38, 22, 'display');
+    campaignProgress.color = new Color(154, 202, 193, 255);
+    campaignProgress.node.setParent(campaignPanel);
+    const campaignCopy = this.createLabel('CampaignCompleteCopy', 'YOU COMPLETED EVERY STAGE.', new Vec3(0, -8, 0), campaignPanelWidth - 64, 34, 17);
+    campaignCopy.node.setParent(campaignPanel);
+    bind('campaignCompleteCopy', campaignCopy);
+    const comingSoon = this.createLabel('ComingSoon', 'MORE STAGES ARE COMING. STAY TUNED!', new Vec3(0, -52, 0), campaignPanelWidth - 64, 42, 17);
+    comingSoon.color = new Color(174, 177, 184, 255);
+    comingSoon.node.setParent(campaignPanel);
+    bind('newStagesComingSoon', comingSoon);
+    const campaignMenuButton = this.createButton(campaignPanel, 'CampaignMenuButton', 'RETURN TO MENU', new Vec3(0, -125, 0), 'returnToTitle', 280, 48, '', 'primary');
+    bind('returnToMenu', campaignMenuButton.label);
+    campaignCompleteRoot.active = false;
+
     const tutorialRoot = this.createOverlay(
       'Tutorial',
       safeArea,
@@ -742,6 +777,7 @@ export class GameplayBootstrap extends Component {
       newGameConfirmRoot,
       failureRoot,
       completionRoot,
+      campaignCompleteRoot,
       tutorialRoot,
       passcodeInput,
       passcodeFeedback,
