@@ -34,6 +34,7 @@ import { BoardRenderer } from './BoardRenderer';
 import { CameraController } from './CameraController';
 import { GameplayController } from './GameplayController';
 import { MobileSafeArea } from './MobileSafeArea';
+import { OnboardingVisual } from './OnboardingVisual';
 import { TouchInputController } from './TouchInputController';
 import { UiButtonVisual, type UiButtonPalette } from './UiButtonVisual';
 import type { UiTextKey } from './shared/game/index';
@@ -71,12 +72,12 @@ interface GameplayUi {
   readonly completionContinueLabel: Label;
   readonly campaignStarsLabel: Label;
   readonly tutorialTitleLabel: Label;
-  readonly tutorialSymbolLabel: Label;
+  readonly tutorialVisual: OnboardingVisual;
   readonly tutorialBodyLabel: Label;
   readonly tutorialProgressLabel: Label;
   readonly tutorialNextLabel: Label;
   readonly howTopicTitleLabel: Label;
-  readonly howTopicSymbolLabel: Label;
+  readonly howTopicVisual: OnboardingVisual;
   readonly howTopicBodyLabel: Label;
   readonly howTopicProgressLabel: Label;
   readonly splitControlRoot: Node;
@@ -176,12 +177,12 @@ export class GameplayBootstrap extends Component {
     gameplay.completionContinueLabel = ui.completionContinueLabel;
     gameplay.campaignStarsLabel = ui.campaignStarsLabel;
     gameplay.tutorialTitleLabel = ui.tutorialTitleLabel;
-    gameplay.tutorialSymbolLabel = ui.tutorialSymbolLabel;
+    gameplay.tutorialVisual = ui.tutorialVisual;
     gameplay.tutorialBodyLabel = ui.tutorialBodyLabel;
     gameplay.tutorialProgressLabel = ui.tutorialProgressLabel;
     gameplay.tutorialNextLabel = ui.tutorialNextLabel;
     gameplay.howTopicTitleLabel = ui.howTopicTitleLabel;
-    gameplay.howTopicSymbolLabel = ui.howTopicSymbolLabel;
+    gameplay.howTopicVisual = ui.howTopicVisual;
     gameplay.howTopicBodyLabel = ui.howTopicBodyLabel;
     gameplay.howTopicProgressLabel = ui.howTopicProgressLabel;
     gameplay.splitControlRoot = ui.splitControlRoot;
@@ -537,7 +538,7 @@ export class GameplayBootstrap extends Component {
     const howTitle = this.createLabel('HowTitle', 'HOW TO PLAY', new Vec3(0, 205, 0), 600, 52, 34);
     howTitle.node.setParent(howToPlayRoot);
     bind('howToPlay', howTitle);
-    const howTopicSymbolLabel = this.createBadge(howToPlayRoot, 'HowTopicBadge', new Vec3(-280, 30, 0));
+    const howTopicVisual = this.createOnboardingVisual(howToPlayRoot, 'HowTopicVisual', new Vec3(-280, 30, 0));
     const howTopicTitleLabel = this.createLabel('HowTopicTitle', '', new Vec3(100, 95, 0), 540, 44, 27);
     howTopicTitleLabel.horizontalAlign = HorizontalTextAlignment.LEFT;
     howTopicTitleLabel.node.setParent(howToPlayRoot);
@@ -695,7 +696,7 @@ export class GameplayBootstrap extends Component {
     const tutorialPanel = this.createUiRoot('TutorialPanel', tutorialRoot, tutorialPanelWidth, 190);
     tutorialPanel.setPosition(0, -visibleSize.height * 0.5 + 115);
     this.drawPanel(tutorialPanel, tutorialPanelWidth, 190, new Color(20, 22, 26, 250));
-    const tutorialSymbolLabel = this.createBadge(tutorialPanel, 'TutorialBadge', new Vec3(-tutorialPanelWidth * 0.5 + 60, 8, 0));
+    const tutorialVisual = this.createOnboardingVisual(tutorialPanel, 'TutorialVisual', new Vec3(-tutorialPanelWidth * 0.5 + 60, 8, 0));
     const tutorialTitleLabel = this.createLabel('TutorialTitle', '', new Vec3(55, 54, 0), tutorialPanelWidth - 220, 40, 25);
     tutorialTitleLabel.horizontalAlign = HorizontalTextAlignment.LEFT;
     tutorialTitleLabel.node.setParent(tutorialPanel);
@@ -798,12 +799,12 @@ export class GameplayBootstrap extends Component {
       completionContinueLabel: continueButton.label,
       campaignStarsLabel,
       tutorialTitleLabel,
-      tutorialSymbolLabel,
+      tutorialVisual,
       tutorialBodyLabel,
       tutorialProgressLabel,
       tutorialNextLabel: tutorialNextButton.label,
       howTopicTitleLabel,
-      howTopicSymbolLabel,
+      howTopicVisual,
       howTopicBodyLabel,
       howTopicProgressLabel,
       splitControlRoot: splitControl.button.node,
@@ -817,14 +818,12 @@ export class GameplayBootstrap extends Component {
     };
   }
 
-  private createBadge(parent: Node, name: string, position: Vec3): Label {
-    const node = this.createUiRoot(name, parent, 104, 104);
+  private createOnboardingVisual(parent: Node, name: string, position: Vec3): OnboardingVisual {
+    const node = this.createUiRoot(name, parent, 112, 112);
     node.setPosition(position);
-    this.drawPanel(node, 104, 104, new Color(43, 45, 50, 252));
-    const label = this.createLabel(`${name}Label`, '', Vec3.ZERO, 92, 92, 14);
-    label.color = new Color(218, 185, 105, 255);
-    label.node.setParent(node);
-    return label;
+    this.drawPanel(node, 112, 112, new Color(43, 45, 50, 252));
+    const visualNode = this.createUiRoot(`${name}Graphics`, node, 104, 104);
+    return visualNode.addComponent(OnboardingVisual);
   }
 
   private createPasscodeInput(
