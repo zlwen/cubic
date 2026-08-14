@@ -3,6 +3,13 @@ import type { TutorialTopicId } from './shared/game/index';
 
 const { ccclass } = _decorator;
 type Point = readonly [number, number];
+type BoardPoint = readonly [number, number, number];
+
+// Orthographic screen basis produced by the gameplay camera offset (-6, 13, -18).
+const BOARD_SCREEN_X: Point = [-0.9486832981, 0.1787374330];
+const BOARD_SCREEN_Y: Point = [0, 0.8249419983];
+const BOARD_SCREEN_Z: Point = [0.3162277660, 0.5362122989];
+const BOARD_PROJECTION_SCALE = 58;
 
 const COLORS = {
   stoneTop: new Color(238, 239, 242, 255),
@@ -88,14 +95,9 @@ export class OnboardingVisual extends Component {
   }
 
   private drawHardSwitch(graphics: Graphics): void {
-    this.drawTile(graphics, 0, 0, 'stone', 76, 40);
-    graphics.strokeColor = COLORS.hardSwitch;
-    graphics.lineWidth = 7;
-    graphics.moveTo(-17, 11);
-    graphics.lineTo(17, -7);
-    graphics.moveTo(17, 11);
-    graphics.lineTo(-17, -7);
-    graphics.stroke();
+    this.drawProjectedStoneTile(graphics);
+    this.fillPolygon(graphics, this.projectedBoxTop(0.58, 0.1, 0.1825, 45), COLORS.hardSwitch);
+    this.fillPolygon(graphics, this.projectedBoxTop(0.58, 0.1, 0.1845, -45), COLORS.hardSwitch);
   }
 
   private drawBridge(graphics: Graphics): void {
@@ -113,14 +115,10 @@ export class OnboardingVisual extends Component {
   }
 
   private drawSplit(graphics: Graphics): void {
-    this.drawTile(graphics, 0, 0, 'stone', 76, 40);
-    this.fillPolygon(graphics, [[-27, 7], [-8, 15], [-8, -3]], COLORS.splitSwitch);
-    this.fillPolygon(graphics, [[27, 7], [8, 15], [8, -3]], COLORS.splitSwitch);
-    graphics.strokeColor = COLORS.splitSwitch;
-    graphics.lineWidth = 4;
-    graphics.moveTo(0, 16);
-    graphics.lineTo(0, -8);
-    graphics.stroke();
+    this.drawProjectedStoneTile(graphics);
+    this.fillPolygon(graphics, this.projectedTriangle(-0.22, 0, 0.21, 0.175, -90), COLORS.splitSwitch);
+    this.fillPolygon(graphics, this.projectedTriangle(0.22, 0, 0.21, 0.175, 90), COLORS.splitSwitch);
+    this.fillPolygon(graphics, this.projectedBoxTop(0.045, 0.5, 0.175, 0), COLORS.splitSwitch);
   }
 
   private drawSwitchCube(graphics: Graphics): void {
@@ -218,6 +216,72 @@ export class OnboardingVisual extends Component {
     for (let index = 1; index < points.length; index += 1) graphics.lineTo(points[index][0], points[index][1]);
     graphics.close();
     graphics.stroke();
+  }
+
+  private drawProjectedStoneTile(graphics: Graphics): void {
+    const topY = 0.1;
+    const bottomY = -0.1;
+    const northSide: BoardPoint[] = [
+      [-0.5, topY, -0.5], [0.5, topY, -0.5],
+      [0.5, bottomY, -0.5], [-0.5, bottomY, -0.5],
+    ];
+    const westSide: BoardPoint[] = [
+      [-0.5, topY, 0.5], [-0.5, topY, -0.5],
+      [-0.5, bottomY, -0.5], [-0.5, bottomY, 0.5],
+    ];
+    const stoneTop: BoardPoint[] = [
+      [-0.492, 0.1225, 0.492], [0.492, 0.1225, 0.492],
+      [0.492, 0.1225, -0.492], [-0.492, 0.1225, -0.492],
+    ];
+
+    this.fillPolygon(graphics, northSide.map((point) => this.projectBoardPoint(point)), this.darken(COLORS.stoneSide, 0.78));
+    this.fillPolygon(graphics, westSide.map((point) => this.projectBoardPoint(point)), COLORS.stoneSide);
+    const projectedTop = stoneTop.map((point) => this.projectBoardPoint(point));
+    this.fillPolygon(graphics, projectedTop, COLORS.stoneTop);
+    this.strokePolygon(graphics, projectedTop, COLORS.stoneEdge, 1);
+  }
+
+  private projectedBoxTop(width: number, depth: number, y: number, yaw: number): Point[] {
+    const halfWidth = width * 0.5;
+    const halfDepth = depth * 0.5;
+    return [
+      this.rotateBoardPoint(-halfWidth, halfDepth, y, yaw),
+      this.rotateBoardPoint(halfWidth, halfDepth, y, yaw),
+      this.rotateBoardPoint(halfWidth, -halfDepth, y, yaw),
+      this.rotateBoardPoint(-halfWidth, -halfDepth, y, yaw),
+    ].map((point) => this.projectBoardPoint(point));
+  }
+
+  private projectedTriangle(centerX: number, centerZ: number, radius: number, y: number, yaw: number): Point[] {
+    const radians = yaw * Math.PI / 180;
+    const cosine = Math.cos(radians);
+    const sine = Math.sin(radians);
+    const points: BoardPoint[] = [];
+    for (let index = 0; index < 3; index += 1) {
+      const theta = index / 3 * Math.PI * 2;
+      const localX = Math.sin(theta) * radius;
+      const localZ = Math.cos(theta) * radius;
+      points.push([
+        centerX + localX * cosine + localZ * sine,
+        y,
+        centerZ - localX * sine + localZ * cosine,
+      ]);
+    }
+    return points.map((point) => this.projectBoardPoint(point));
+  }
+
+  private rotateBoardPoint(x: number, z: number, y: number, yaw: number): BoardPoint {
+    const radians = yaw * Math.PI / 180;
+    const cosine = Math.cos(radians);
+    const sine = Math.sin(radians);
+    return [x * cosine + z * sine, y, -x * sine + z * cosine];
+  }
+
+  private projectBoardPoint([x, y, z]: BoardPoint): Point {
+    return [
+      (x * BOARD_SCREEN_X[0] + y * BOARD_SCREEN_Y[0] + z * BOARD_SCREEN_Z[0]) * BOARD_PROJECTION_SCALE,
+      (x * BOARD_SCREEN_X[1] + y * BOARD_SCREEN_Y[1] + z * BOARD_SCREEN_Z[1]) * BOARD_PROJECTION_SCALE,
+    ];
   }
 
   private darken(color: Color, factor: number): Color {
