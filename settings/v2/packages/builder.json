@@ -2,10 +2,10 @@
   "__version__": "1.3.9",
   "splash-setting": {
     "logo": {
-      "image": "project://settings/cubic-splash-logo.png",
+      "image": "project://settings/cubic-mark.png",
       "type": "custom"
     },
-    "displayRatio": 3.68,
+    "displayRatio": 4,
     "totalTime": 2000
   }
 }
