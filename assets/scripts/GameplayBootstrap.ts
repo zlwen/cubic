@@ -40,6 +40,7 @@ import { UiButtonVisual, type UiButtonPalette } from './UiButtonVisual';
 import type { UiTextKey } from './shared/game/index';
 
 const { ccclass, property } = _decorator;
+const GAME_BACKGROUND_COLOR = new Color(7, 8, 10, 255);
 
 interface GameplayUi {
   readonly levelStatLabel: Label;
@@ -98,31 +99,55 @@ export class GameplayBootstrap extends Component {
   @property(Material)
   litBaseMaterial: Material | null = null;
 
+  @property(Texture2D)
+  logoTexture: Texture2D | null = null;
+
+  @property(TTFFont)
+  displayFont: TTFFont | null = null;
+
   private solidSpriteFrame: SpriteFrame | null = null;
   private logoSpriteFrame: SpriteFrame | null = null;
-  private displayFont: TTFFont | null = null;
+
+  onLoad(): void {
+    const camera = this.node.parent?.getChildByName('Main Camera')?.getComponent(Camera);
+    if (camera) camera.clearColor = GAME_BACKGROUND_COLOR;
+  }
 
   start(): void {
-    let pending = 2;
+    if (this.logoTexture) this.setLogoTexture(this.logoTexture);
+
+    let pending = Number(!this.displayFont) + Number(!this.logoTexture);
+    if (pending === 0) {
+      this.initialize();
+      return;
+    }
+
     const complete = (): void => {
       pending -= 1;
       if (pending === 0) this.initialize();
     };
-    resources.load('fonts/Oxanium-SemiBold', TTFFont, (error, font) => {
-      if (error) console.warn('Display font failed to load.', error);
-      else this.displayFont = font;
-      complete();
-    });
-    resources.load('ui/cubic-mark/texture', Texture2D, (error, texture) => {
-      if (error) console.warn('Game logo failed to load.', error);
-      else {
-        const spriteFrame = new SpriteFrame();
-        spriteFrame.texture = texture;
-        spriteFrame.packable = false;
-        this.logoSpriteFrame = spriteFrame;
-      }
-      complete();
-    });
+    if (!this.displayFont) {
+      resources.load('fonts/Oxanium-SemiBold', TTFFont, (error, font) => {
+        if (error) console.warn('Display font failed to load.', error);
+        else this.displayFont = font;
+        complete();
+      });
+    }
+    if (!this.logoTexture) {
+      resources.load('ui/cubic-mark/texture', Texture2D, (error, texture) => {
+        if (error) console.warn('Game logo failed to load.', error);
+        else this.setLogoTexture(texture);
+        complete();
+      });
+    }
+  }
+
+  private setLogoTexture(texture: Texture2D): void {
+    this.logoTexture = texture;
+    const spriteFrame = new SpriteFrame();
+    spriteFrame.texture = texture;
+    spriteFrame.packable = false;
+    this.logoSpriteFrame = spriteFrame;
   }
 
   private initialize(): void {
@@ -273,7 +298,7 @@ export class GameplayBootstrap extends Component {
     const camera = node.getComponent(Camera) ?? node.addComponent(Camera);
     camera.projection = Camera.ProjectionType.ORTHO;
     camera.orthoHeight = 6;
-    camera.clearColor = new Color(7, 8, 10, 255);
+    camera.clearColor = GAME_BACKGROUND_COLOR;
     node.setPosition(new Vec3(-6, 13, -18));
     node.lookAt(new Vec3(0, 0, 0));
     return node;

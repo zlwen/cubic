@@ -222,9 +222,9 @@
     "_far": 1000,
     "_color": {
       "__type__": "cc.Color",
-      "r": 51,
-      "g": 51,
-      "b": 51,
+      "r": 7,
+      "g": 8,
+      "b": 10,
       "a": 255
     },
     "_depth": 1,
@@ -307,6 +307,14 @@
     "litBaseMaterial": {
       "__uuid__": "5f3f8f8c-a2f9-4b4d-b0d6-7af213820133",
       "__expectedType__": "cc.Material"
+    },
+    "logoTexture": {
+      "__uuid__": "3a234140-96bc-4aa4-b6e3-1242cc6c58af@6c48a",
+      "__expectedType__": "cc.Texture2D"
+    },
+    "displayFont": {
+      "__uuid__": "06f2e0a5-2299-4dca-9475-eabd3c0a3000",
+      "__expectedType__": "cc.TTFFont"
     },
     "_id": "3bwEmj8sRIaYMyQSCcngO0"
   },
